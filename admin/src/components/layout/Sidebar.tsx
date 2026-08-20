@@ -14,6 +14,7 @@ import {
   LogOut,
   ShieldCheck,
   Sparkles,
+  X,
 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 
@@ -22,7 +23,7 @@ interface SidebarProps {
   onClose?: () => void
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ isOpen: _isOpen }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const { user, signOut } = useAuth()
 
   const navItems = [
@@ -38,8 +39,15 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen: _isOpen }) => {
     { label: 'Reports & Analytics', path: '/reports', icon: <BarChart3 size={20} /> },
   ]
 
+  const handleLinkClick = () => {
+    if (window.innerWidth <= 1024 && onClose) {
+      onClose()
+    }
+  }
+
   return (
     <aside
+      className={`sidebar-drawer ${isOpen ? 'open' : ''}`}
       style={{
         width: 260,
         backgroundColor: 'var(--sidebar-bg)',
@@ -57,59 +65,79 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen: _isOpen }) => {
       {/* Brand Header */}
       <div
         style={{
-          padding: '1.5rem 1.25rem',
+          padding: '1.25rem 1.25rem',
           display: 'flex',
           alignItems: 'center',
-          gap: '0.75rem',
+          justifyContent: 'space-between',
           borderBottom: '1px solid var(--sidebar-border)',
         }}
       >
-        <div
-          style={{
-            width: 40,
-            height: 40,
-            borderRadius: 'var(--radius-md)',
-            background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: 'white',
-            boxShadow: '0 4px 12px rgba(5, 150, 105, 0.4)',
-          }}
-        >
-          <Sparkles size={22} />
-        </div>
-        <div>
-          <h2
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <div
             style={{
-              fontSize: '1.25rem',
-              fontWeight: 800,
-              letterSpacing: '-0.02em',
-              color: '#ffffff',
+              width: 38,
+              height: 38,
+              borderRadius: 'var(--radius-md)',
+              background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)',
               display: 'flex',
               alignItems: 'center',
-              gap: '0.35rem',
+              justifyContent: 'center',
+              color: 'white',
+              boxShadow: '0 4px 12px rgba(5, 150, 105, 0.4)',
+              flexShrink: 0,
             }}
           >
-            BuyLanka
-            <span
+            <Sparkles size={20} />
+          </div>
+          <div>
+            <h2
               style={{
-                fontSize: '0.625rem',
-                backgroundColor: 'rgba(5, 150, 105, 0.3)',
-                color: '#34d399',
-                padding: '0.15rem 0.4rem',
-                borderRadius: 'var(--radius-sm)',
-                textTransform: 'uppercase',
-                fontWeight: 700,
+                fontSize: '1.15rem',
+                fontWeight: 800,
+                letterSpacing: '-0.02em',
+                color: '#ffffff',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.35rem',
+                lineHeight: 1.2,
               }}
             >
-              ADMIN
-            </span>
-          </h2>
-          <p style={{ fontSize: '0.75rem', color: 'var(--sidebar-text-muted)' }}>
-            Sri Lanka Marketplace
-          </p>
+              BuyLanka
+              <span
+                style={{
+                  fontSize: '0.625rem',
+                  backgroundColor: 'rgba(5, 150, 105, 0.3)',
+                  color: '#34d399',
+                  padding: '0.15rem 0.4rem',
+                  borderRadius: 'var(--radius-sm)',
+                  textTransform: 'uppercase',
+                  fontWeight: 700,
+                }}
+              >
+                ADMIN
+              </span>
+            </h2>
+            <p style={{ fontSize: '0.7rem', color: 'var(--sidebar-text-muted)', marginTop: '2px' }}>
+              Sri Lanka Marketplace
+            </p>
+          </div>
         </div>
+
+        {/* Mobile Close Button */}
+        <button
+          onClick={onClose}
+          className="btn-icon mobile-only"
+          style={{
+            color: 'var(--sidebar-text-muted)',
+            border: 'none',
+            background: 'transparent',
+            cursor: 'pointer',
+            padding: '4px',
+          }}
+          aria-label="Close sidebar"
+        >
+          <X size={20} />
+        </button>
       </div>
 
       {/* Navigation List */}
@@ -141,6 +169,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen: _isOpen }) => {
             key={item.path}
             to={item.path}
             end={item.path === '/'}
+            onClick={handleLinkClick}
             style={({ isActive }) => ({
               display: 'flex',
               alignItems: 'center',
@@ -180,6 +209,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen: _isOpen }) => {
               alignItems: 'center',
               justifyContent: 'center',
               color: '#34d399',
+              flexShrink: 0,
             }}
           >
             <ShieldCheck size={20} />

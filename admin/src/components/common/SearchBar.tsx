@@ -18,7 +18,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
 }) => {
   return (
     <div
-      className={className}
+      className={`search-bar-wrapper ${className}`}
       style={{
         position: 'relative',
         display: 'flex',

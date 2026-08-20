@@ -316,7 +316,7 @@ export const RidersPage: React.FC = () => {
         size="lg"
       >
         <form onSubmit={handleCreateRider}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+          <div className="form-grid-2">
             <Input
               label="Full Name"
               placeholder="e.g. Dhanushka Kumara"
@@ -334,7 +334,7 @@ export const RidersPage: React.FC = () => {
             />
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+          <div className="form-grid-2">
             <Input
               label="Phone Number"
               placeholder="+94 77 123 9988"
@@ -351,7 +351,7 @@ export const RidersPage: React.FC = () => {
             />
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+          <div className="form-grid-2">
             <Select
               label="Vehicle Type"
               value={vehicleType}

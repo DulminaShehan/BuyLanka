@@ -121,13 +121,16 @@ export const authService = {
       try {
         const { data: newProfile } = await supabase
           .from('profiles')
-          .upsert({
-            id: data.user.id,
-            email,
-            full_name: fullName || 'Admin User',
-            role: 'admin',
-            status: 'active',
-          })
+          .upsert(
+            {
+              id: data.user.id,
+              email: email.trim().toLowerCase(),
+              full_name: fullName?.trim() || 'Admin User',
+              role: 'admin',
+              status: 'active',
+            },
+            { onConflict: 'email' }
+          )
           .select()
           .maybeSingle()
 

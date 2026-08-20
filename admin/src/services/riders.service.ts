@@ -35,34 +35,62 @@ export const ridersService = {
     drivingLicenseNumber: string
     assignedZone: string
   }): Promise<RiderWithProfile> {
-    const newProfileId = crypto.randomUUID()
+    const trimmedEmail = payload.email.trim().toLowerCase()
 
-    const { data: profileData, error: profileError } = await supabase
+    // 1. Check if profile with this email already exists
+    const { data: existingProfile } = await supabase
       .from('profiles')
-      .insert({
-        id: newProfileId,
-        full_name: payload.fullName,
-        email: payload.email,
-        phone_number: payload.phoneNumber,
-        role: 'rider',
-        status: 'active',
-      })
-      .select()
-      .single()
+      .select('id, email, role, status')
+      .eq('email', trimmedEmail)
+      .maybeSingle()
 
-    if (profileError) {
-      console.error('Error creating rider profile:', profileError)
-      throw new Error(profileError.message || 'Failed to create rider profile record')
+    let profileId = existingProfile?.id
+
+    if (!profileId) {
+      profileId = crypto.randomUUID()
+      const { data: newProfile, error: profileError } = await supabase
+        .from('profiles')
+        .insert({
+          id: profileId,
+          full_name: payload.fullName.trim(),
+          email: trimmedEmail,
+          phone_number: payload.phoneNumber.trim(),
+          role: 'rider',
+          status: 'active',
+        })
+        .select()
+        .single()
+
+      if (profileError) {
+        if (profileError.code === '23505' || profileError.message.includes('profiles_email_key')) {
+          throw new Error(`A user with email "${trimmedEmail}" is already registered.`)
+        }
+        console.error('Error creating rider profile:', profileError)
+        throw new Error(profileError.message || 'Failed to create rider profile record')
+      }
+
+      profileId = newProfile.id
+    } else {
+      await supabase
+        .from('profiles')
+        .update({
+          full_name: payload.fullName.trim(),
+          phone_number: payload.phoneNumber.trim(),
+          role: 'rider',
+          status: 'active',
+        })
+        .eq('id', profileId)
     }
 
+    // 2. Upsert Rider details record
     const { data: riderData, error: riderError } = await supabase
       .from('riders')
-      .insert({
-        id: profileData.id,
+      .upsert({
+        id: profileId,
         vehicle_type: payload.vehicleType,
-        vehicle_number: payload.vehicleNumber,
-        driving_license_number: payload.drivingLicenseNumber,
-        assigned_zone: payload.assignedZone,
+        vehicle_number: payload.vehicleNumber.trim(),
+        driving_license_number: payload.drivingLicenseNumber.trim(),
+        assigned_zone: payload.assignedZone.trim(),
         availability_status: 'available',
         verification_status: 'approved',
       })
@@ -73,8 +101,8 @@ export const ridersService = {
       .single()
 
     if (riderError) {
-      console.error('Error creating rider record:', riderError)
-      throw new Error(riderError.message || 'Failed to create rider record')
+      console.error('Error creating/updating rider record:', riderError)
+      throw new Error(riderError.message || 'Failed to save rider details')
     }
 
     return riderData as any
