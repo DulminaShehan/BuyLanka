@@ -253,7 +253,7 @@ export const ProductsPage: React.FC = () => {
           subtitle={`Store: ${selectedProduct.shop?.name} | Category: ${selectedProduct.category?.name}`}
           size="lg"
         >
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: '1.5rem' }}>
+          <div className="modal-split-view">
             <div>
               <img
                 src={
@@ -278,7 +278,7 @@ export const ProductsPage: React.FC = () => {
                 {selectedProduct.description || 'No description provided by vendor.'}
               </p>
 
-              <div style={{ background: 'var(--bg-app)', padding: '0.875rem', borderRadius: 'var(--radius-md)', fontSize: '0.8125rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+              <div className="form-grid-2" style={{ background: 'var(--bg-app)', padding: '0.875rem', borderRadius: 'var(--radius-md)', fontSize: '0.8125rem' }}>
                 <p><strong>SKU:</strong> {selectedProduct.sku || 'None'}</p>
                 <p><strong>Available Stock:</strong> {selectedProduct.stock_quantity} pcs</p>
                 <p><strong>Shop City:</strong> {selectedProduct.shop?.city || 'Sri Lanka'}</p>

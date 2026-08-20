@@ -317,7 +317,7 @@ export const ShopsPage: React.FC = () => {
             />
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+          <div className="form-grid-2">
             <Input
               label="Street Address"
               placeholder="No. 15 Galle Road"
@@ -332,7 +332,7 @@ export const ShopsPage: React.FC = () => {
             />
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+          <div className="form-grid-2">
             <Select
               label="District"
               value={district}

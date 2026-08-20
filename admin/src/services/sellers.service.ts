@@ -38,40 +38,67 @@ export const sellersService = {
     bankAccountNumber?: string
     bankBranch?: string
   }): Promise<SellerWithProfile> {
-    const newProfileId = crypto.randomUUID()
+    const trimmedEmail = payload.email.trim().toLowerCase()
 
-    // 1. Create Profile record for the seller
-    const { data: profileData, error: profileError } = await supabase
+    // 1. Check if profile with this email already exists
+    const { data: existingProfile } = await supabase
       .from('profiles')
-      .insert({
-        id: newProfileId,
-        full_name: payload.fullName,
-        email: payload.email,
-        phone_number: payload.phoneNumber,
-        role: 'seller',
-        status: 'active',
-      })
-      .select()
-      .single()
+      .select('id, email, role, status')
+      .eq('email', trimmedEmail)
+      .maybeSingle()
 
-    if (profileError) {
-      console.error('Error creating seller profile:', profileError)
-      throw new Error(profileError.message || 'Failed to create seller profile record')
+    let profileId = existingProfile?.id
+
+    if (!profileId) {
+      profileId = crypto.randomUUID()
+      const { data: newProfile, error: profileError } = await supabase
+        .from('profiles')
+        .insert({
+          id: profileId,
+          full_name: payload.fullName.trim(),
+          email: trimmedEmail,
+          phone_number: payload.phoneNumber.trim(),
+          role: 'seller',
+          status: 'active',
+        })
+        .select()
+        .single()
+
+      if (profileError) {
+        if (profileError.code === '23505' || profileError.message.includes('profiles_email_key')) {
+          throw new Error(`A user with email "${trimmedEmail}" is already registered.`)
+        }
+        console.error('Error creating seller profile:', profileError)
+        throw new Error(profileError.message || 'Failed to create seller profile record')
+      }
+
+      profileId = newProfile.id
+    } else {
+      // Update existing profile to seller role
+      await supabase
+        .from('profiles')
+        .update({
+          full_name: payload.fullName.trim(),
+          phone_number: payload.phoneNumber.trim(),
+          role: 'seller',
+          status: 'active',
+        })
+        .eq('id', profileId)
     }
 
-    // 2. Create Seller details record
+    // 2. Upsert Seller details record
     const { data: sellerData, error: sellerError } = await supabase
       .from('sellers')
-      .insert({
-        id: profileData.id,
-        business_name: payload.businessName,
-        business_registration_number: payload.businessRegistrationNumber || null,
-        nic_number: payload.nicNumber,
+      .upsert({
+        id: profileId,
+        business_name: payload.businessName.trim(),
+        business_registration_number: payload.businessRegistrationNumber?.trim() || null,
+        nic_number: payload.nicNumber.trim(),
         verification_status: 'verified',
         commission_rate: payload.commissionRate || 10.0,
         bank_name: payload.bankName || null,
-        bank_account_number: payload.bankAccountNumber || null,
-        bank_branch: payload.bankBranch || null,
+        bank_account_number: payload.bankAccountNumber?.trim() || null,
+        bank_branch: payload.bankBranch?.trim() || null,
       })
       .select(`
         *,
@@ -80,8 +107,8 @@ export const sellersService = {
       .single()
 
     if (sellerError) {
-      console.error('Error creating seller record:', sellerError)
-      throw new Error(sellerError.message || 'Failed to create seller record')
+      console.error('Error creating/updating seller record:', sellerError)
+      throw new Error(sellerError.message || 'Failed to save seller details')
     }
 
     return sellerData as any

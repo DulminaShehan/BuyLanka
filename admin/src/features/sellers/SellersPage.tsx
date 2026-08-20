@@ -252,7 +252,7 @@ export const SellersPage: React.FC = () => {
         size="lg"
       >
         <form onSubmit={handleCreateSeller}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+          <div className="form-grid-2">
             <Input
               label="Proprietor / Contact Name"
               placeholder="e.g. Nimal Jayawardena"
@@ -270,7 +270,7 @@ export const SellersPage: React.FC = () => {
             />
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+          <div className="form-grid-2">
             <Input
               label="Contact Phone Number"
               placeholder="+94 77 123 4567"
@@ -287,7 +287,7 @@ export const SellersPage: React.FC = () => {
             />
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+          <div className="form-grid-2">
             <Input
               label="Business / Trading Name"
               placeholder="Ceylon Spice Haven Exports"
@@ -316,7 +316,7 @@ export const SellersPage: React.FC = () => {
             Bank Payout Details
           </h4>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
+          <div className="form-grid-3">
             <Select
               label="Bank Name"
               value={bankName}

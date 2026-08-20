@@ -26,14 +26,22 @@ export const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
         boxShadow: 'var(--shadow-sm)',
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
         <button
           onClick={onToggleSidebar}
           className="btn-icon"
-          style={{ display: 'none', background: 'none', border: 'none', cursor: 'pointer' }}
+          style={{
+            display: 'none',
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            padding: '6px',
+            color: 'var(--text-main)',
+          }}
           id="mobile-sidebar-toggle"
+          aria-label="Toggle navigation menu"
         >
-          <Menu size={20} />
+          <Menu size={22} />
         </button>
 
         {/* Database Connection Status Badge */}
@@ -41,8 +49,8 @@ export const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '0.5rem',
-            padding: '0.3rem 0.75rem',
+            gap: '0.4rem',
+            padding: '0.25rem 0.625rem',
             borderRadius: 'var(--radius-full)',
             backgroundColor: isSupabaseConfigured ? 'var(--success-bg)' : 'var(--warning-bg)',
             border: `1px solid ${isSupabaseConfigured ? 'var(--success-border)' : 'var(--warning-border)'}`,
@@ -51,13 +59,15 @@ export const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
             color: isSupabaseConfigured ? 'var(--success-text)' : 'var(--warning-text)',
           }}
         >
-          <Database size={14} />
-          <span>{isSupabaseConfigured ? 'Supabase Connected' : 'Supabase Not Configured'}</span>
+          <Database size={13} />
+          <span className="header-badge-label">
+            {isSupabaseConfigured ? 'Connected' : 'Not Configured'}
+          </span>
           {isSupabaseConfigured ? <CheckCircle size={12} /> : <AlertCircle size={12} />}
         </div>
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
         {/* Notification Bell */}
         <button
           className="btn-icon"
@@ -67,29 +77,29 @@ export const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
             position: 'relative',
             cursor: 'pointer',
             color: 'var(--text-muted)',
-            padding: '0.5rem',
+            padding: '0.4rem',
             borderRadius: '50%',
           }}
           title="Notifications"
         >
-          <Bell size={20} />
+          <Bell size={18} />
         </button>
 
-        <div style={{ width: 1, height: 24, backgroundColor: 'var(--border-color)' }} />
+        <div style={{ width: 1, height: 20, backgroundColor: 'var(--border-color)' }} />
 
         {/* Admin User Chip */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
           {user?.avatar_url ? (
             <img
               src={user.avatar_url}
               alt={user.full_name}
-              style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--primary-border)' }}
+              style={{ width: 34, height: 34, borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--primary-border)' }}
             />
           ) : (
             <div
               style={{
-                width: 36,
-                height: 36,
+                width: 34,
+                height: 34,
                 borderRadius: '50%',
                 backgroundColor: 'var(--primary-light)',
                 color: 'var(--primary)',
@@ -97,14 +107,15 @@ export const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
                 alignItems: 'center',
                 justifyContent: 'center',
                 border: '2px solid var(--primary-border)',
+                flexShrink: 0,
               }}
             >
-              <User size={18} />
+              <User size={16} />
             </div>
           )}
-          <div>
-            <p style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--text-main)', lineHeight: 1.2 }}>
-              {user?.full_name || user?.email || 'Administrator'}
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <p style={{ fontSize: '0.8125rem', fontWeight: 700, color: 'var(--text-main)', lineHeight: 1.2, maxWidth: 120, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {user?.full_name || user?.email || 'Admin'}
             </p>
             <p style={{ fontSize: '0.6875rem', color: 'var(--text-muted)' }}>
               Super Admin

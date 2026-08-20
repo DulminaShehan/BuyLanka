@@ -241,7 +241,7 @@ export const OrdersPage: React.FC = () => {
           </div>
 
           {/* Totals & Delivery Address */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '1.5rem' }}>
+          <div className="modal-split-view">
             <div style={{ background: 'var(--bg-app)', padding: '1rem', borderRadius: 'var(--radius-md)', fontSize: '0.8125rem' }}>
               <h5 style={{ fontWeight: 700, fontSize: '0.875rem', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
                 <MapPin size={14} color="var(--primary)" /> Shipping Address
