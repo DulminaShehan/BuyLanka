@@ -10,6 +10,7 @@ import {
   ArrowRight,
   TrendingUp,
   RefreshCw,
+  ShieldCheck,
 } from 'lucide-react'
 import {
   AreaChart,
@@ -65,9 +66,14 @@ export const OverviewPage: React.FC = () => {
         title="Marketplace Overview"
         subtitle="Real-time performance metrics and operations control across Sri Lanka"
         actions={
-          <Button variant="secondary" onClick={loadData} icon={<RefreshCw size={16} />}>
-            Refresh
-          </Button>
+          <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+            <Link to="/admins" className="btn btn-primary" style={{ textDecoration: 'none' }}>
+              <ShieldCheck size={16} /> Manage Admins
+            </Link>
+            <Button variant="secondary" onClick={loadData} icon={<RefreshCw size={16} />}>
+              Refresh
+            </Button>
+          </div>
         }
       />
 

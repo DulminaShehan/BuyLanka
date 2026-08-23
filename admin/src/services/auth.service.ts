@@ -96,7 +96,7 @@ export const authService = {
             await supabase.auth.signOut()
             return {
               profile: null,
-              error: `Access denied: Account '${profile.email}' has role '${profile.role}'. Please set role to 'admin' in Supabase SQL editor or create a new account in 'Register Admin' tab.`,
+              error: `Access denied: Account '${profile.email}' does not have administrator privileges. Please contact a Super Administrator.`,
             }
           }
         } catch {

@@ -36,6 +36,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     { label: 'Delivery Riders', path: '/riders', icon: <Bike size={20} /> },
     { label: 'Deliveries', path: '/deliveries', icon: <Navigation size={20} /> },
     { label: 'Customers', path: '/customers', icon: <UserCheck size={20} /> },
+    { label: 'Administrators', path: '/admins', icon: <ShieldCheck size={20} /> },
     { label: 'Reports & Analytics', path: '/reports', icon: <BarChart3 size={20} /> },
   ]
 
