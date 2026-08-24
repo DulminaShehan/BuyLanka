@@ -1,30 +1,38 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-
+import 'package:buylanka/features/auth/controllers/auth_controller.dart';
+import 'package:buylanka/features/auth/presentation/seller_login_screen.dart';
 import 'package:buylanka/main.dart';
 
+// Fake AuthController for testing
+class FakeAuthController extends StateNotifier<AuthStateData> implements AuthController {
+  FakeAuthController(super.state);
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  testWidgets('Renders Seller Login Screen when unauthenticated', (WidgetTester tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authControllerProvider.overrideWith((ref) {
+            return FakeAuthController(
+              const AuthStateData(isLoading: false, profile: null),
+            );
+          }),
+        ],
+        child: const BuyLankaSellerApp(),
+      ),
+    );
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    await tester.pumpAndSettle();
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
-
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    // Verify login screen elements
+    expect(find.byType(SellerLoginScreen), findsOneWidget);
+    expect(find.text('Merchant & Restaurant Portal'), findsOneWidget);
+    expect(find.byType(ElevatedButton), findsOneWidget);
   });
 }
