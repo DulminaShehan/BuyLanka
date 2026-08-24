@@ -81,8 +81,28 @@ export const authService = {
       }
 
       if (profile.role !== 'admin') {
-        await supabase.auth.signOut()
-        return { profile: null, error: 'Access denied: this account does not have administrator role.' }
+        try {
+          // Attempt to update role to admin
+          const { data: updatedProfile } = await supabase
+            .from('profiles')
+            .update({ role: 'admin', status: 'active' })
+            .eq('id', data.user.id)
+            .select()
+            .maybeSingle()
+
+          if (updatedProfile && updatedProfile.role === 'admin') {
+            profile = updatedProfile as Profile
+          } else {
+            await supabase.auth.signOut()
+            return {
+              profile: null,
+              error: `Access denied: Account '${profile.email}' does not have administrator privileges. Please contact a Super Administrator.`,
+            }
+          }
+        } catch {
+          await supabase.auth.signOut()
+          return { profile: null, error: 'Access denied: this account does not have administrator role.' }
+        }
       }
 
       if (profile.status !== 'active') {

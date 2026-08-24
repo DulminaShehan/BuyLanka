@@ -117,4 +117,30 @@ export const ridersService = {
     const { error } = await supabase.from('riders').update({ assigned_zone }).eq('id', id)
     if (error) throw error
   },
+
+  async deleteRider(id: string): Promise<void> {
+    // 1. Unassign any pending or active deliveries currently tied to this rider
+    try {
+      await supabase
+        .from('deliveries')
+        .update({ rider_id: null, delivery_status: 'unassigned' })
+        .eq('rider_id', id)
+    } catch (err) {
+      console.warn('Notice when unassigning deliveries for deleted rider:', err)
+    }
+
+    // 2. Delete from riders table
+    const { error: riderError } = await supabase.from('riders').delete().eq('id', id)
+    if (riderError) {
+      console.error('Error deleting rider record:', riderError)
+      throw new Error(riderError.message || 'Failed to delete rider record')
+    }
+
+    // 3. Delete from profiles table
+    try {
+      await supabase.from('profiles').delete().eq('id', id)
+    } catch (profileErr) {
+      console.warn('Notice when cleaning profile for deleted rider:', profileErr)
+    }
+  },
 }

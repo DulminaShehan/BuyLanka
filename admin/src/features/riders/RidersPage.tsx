@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Plus, Bike, Check, ShieldAlert, Star, MapPin, Truck, Car } from 'lucide-react'
+import { Plus, Bike, Check, ShieldAlert, Star, MapPin, Truck, Car, Trash2, AlertTriangle } from 'lucide-react'
 import { PageHeader } from '../../components/common/PageHeader'
 import { SearchBar } from '../../components/common/SearchBar'
 import { Button } from '../../components/ui/Button'
@@ -35,6 +35,11 @@ export const RidersPage: React.FC = () => {
   const [isZoneModalOpen, setIsZoneModalOpen] = useState(false)
   const [selectedRider, setSelectedRider] = useState<RiderWithProfile | null>(null)
   const [newZone, setNewZone] = useState('')
+
+  // Delete Rider state
+  const [riderToDelete, setRiderToDelete] = useState<RiderWithProfile | null>(null)
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   const { success, error: toastError } = useToast()
 
@@ -108,6 +113,22 @@ export const RidersPage: React.FC = () => {
       loadRiders()
     } catch (err) {
       toastError('Failed to update zone')
+    }
+  }
+
+  const handleDeleteRider = async () => {
+    if (!riderToDelete) return
+    setIsDeleting(true)
+    try {
+      await ridersService.deleteRider(riderToDelete.id)
+      success(`Delivery rider "${riderToDelete.profile.full_name}" removed from the fleet`)
+      setIsDeleteModalOpen(false)
+      setRiderToDelete(null)
+      loadRiders()
+    } catch (err: any) {
+      toastError(err.message || 'Failed to remove delivery rider')
+    } finally {
+      setIsDeleting(false)
     }
   }
 
@@ -268,7 +289,7 @@ export const RidersPage: React.FC = () => {
                     {formatDate(rider.created_at)}
                   </td>
                   <td style={{ textAlign: 'right' }}>
-                    <div style={{ display: 'inline-flex', gap: '0.5rem' }}>
+                    <div style={{ display: 'inline-flex', gap: '0.4rem', alignItems: 'center' }}>
                       {rider.verification_status === 'pending' && (
                         <Button
                           variant="success"
@@ -281,7 +302,7 @@ export const RidersPage: React.FC = () => {
                       )}
                       {rider.verification_status === 'approved' && (
                         <Button
-                          variant="danger"
+                          variant="secondary"
                           size="sm"
                           onClick={() => handleStatusChange(rider.id, 'suspended', rider.profile.full_name)}
                           icon={<ShieldAlert size={14} />}
@@ -298,6 +319,18 @@ export const RidersPage: React.FC = () => {
                           Reactivate
                         </Button>
                       )}
+                      <Button
+                        variant="danger"
+                        size="sm"
+                        icon={<Trash2 size={14} />}
+                        title="Remove Delivery Rider"
+                        onClick={() => {
+                          setRiderToDelete(rider)
+                          setIsDeleteModalOpen(true)
+                        }}
+                      >
+                        Remove
+                      </Button>
                     </div>
                   </td>
                 </tr>
@@ -417,6 +450,83 @@ export const RidersPage: React.FC = () => {
               </Button>
             </div>
           </form>
+        </Modal>
+      )}
+
+      {/* Delete Rider Confirmation Modal */}
+      {riderToDelete && (
+        <Modal
+          isOpen={isDeleteModalOpen}
+          onClose={() => {
+            if (!isDeleting) {
+              setIsDeleteModalOpen(false)
+              setRiderToDelete(null)
+            }
+          }}
+          title="Remove Delivery Rider"
+          size="sm"
+        >
+          <div style={{ textAlign: 'center', padding: '1rem 0' }}>
+            <div
+              style={{
+                width: 56,
+                height: 56,
+                borderRadius: '50%',
+                backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                color: 'var(--danger)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 1rem',
+              }}
+            >
+              <AlertTriangle size={28} />
+            </div>
+
+            <h3 style={{ fontSize: '1.125rem', fontWeight: 700, marginBottom: '0.5rem', color: 'var(--text-main)' }}>
+              Confirm Rider Removal
+            </h3>
+
+            <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: '1.25rem', lineHeight: 1.5 }}>
+              Are you sure you want to remove rider <strong>{riderToDelete.profile.full_name}</strong> ({riderToDelete.vehicle_number} - {riderToDelete.vehicle_type.replace('_', ' ')}) from the delivery fleet?
+            </p>
+
+            <div
+              style={{
+                padding: '0.75rem 1rem',
+                backgroundColor: 'var(--bg-hover)',
+                borderRadius: 'var(--radius-md)',
+                fontSize: '0.8125rem',
+                color: 'var(--danger-text)',
+                border: '1px solid var(--danger-border)',
+                textAlign: 'left',
+                marginBottom: '1.5rem',
+              }}
+            >
+              <strong>⚠️ Notice:</strong> Active and queued order dispatches for this rider will be safely unassigned back to the dispatch pool.
+            </div>
+
+            <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
+              <Button
+                variant="secondary"
+                disabled={isDeleting}
+                onClick={() => {
+                  setIsDeleteModalOpen(false)
+                  setRiderToDelete(null)
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="danger"
+                isLoading={isDeleting}
+                icon={<Trash2 size={16} />}
+                onClick={handleDeleteRider}
+              >
+                Yes, Remove Rider
+              </Button>
+            </div>
+          </div>
         </Modal>
       )}
     </div>
