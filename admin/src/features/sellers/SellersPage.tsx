@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Plus, Users, CheckCircle, XCircle, ShieldAlert, Building2 } from 'lucide-react'
+import { Plus, Users, CheckCircle, XCircle, ShieldAlert, Building2, Trash2, AlertTriangle } from 'lucide-react'
 import { PageHeader } from '../../components/common/PageHeader'
 import { SearchBar } from '../../components/common/SearchBar'
 import { Button } from '../../components/ui/Button'
@@ -26,6 +26,11 @@ export const SellersPage: React.FC = () => {
   const [isVerificationModalOpen, setIsVerificationModalOpen] = useState(false)
   const [newCommissionRate, setNewCommissionRate] = useState<number>(10)
   const [submitting, setSubmitting] = useState(false)
+
+  // Delete state
+  const [sellerToDelete, setSellerToDelete] = useState<SellerWithProfile | null>(null)
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   // Create form state
   const [fullName, setFullName] = useState('')
@@ -110,6 +115,26 @@ export const SellersPage: React.FC = () => {
       toastError(err.message || 'Failed to update seller status')
     } finally {
       setSubmitting(false)
+    }
+  }
+
+  const handleDeleteSeller = async () => {
+    if (!sellerToDelete) return
+    setIsDeleting(true)
+    try {
+      await sellersService.deleteSeller(sellerToDelete.id)
+      success(`Seller "${sellerToDelete.business_name}" has been removed successfully`)
+      setIsDeleteModalOpen(false)
+      setSellerToDelete(null)
+      if (selectedSeller?.id === sellerToDelete.id) {
+        setIsVerificationModalOpen(false)
+        setSelectedSeller(null)
+      }
+      loadSellers()
+    } catch (err: any) {
+      toastError(err.message || 'Failed to remove seller')
+    } finally {
+      setIsDeleting(false)
     }
   }
 
@@ -232,9 +257,23 @@ export const SellersPage: React.FC = () => {
                     {formatDate(seller.created_at)}
                   </td>
                   <td style={{ textAlign: 'right' }}>
-                    <Button variant="secondary" size="sm" onClick={() => openVerifyModal(seller)}>
-                      Manage / Verify
-                    </Button>
+                    <div style={{ display: 'inline-flex', gap: '0.5rem', alignItems: 'center' }}>
+                      <Button variant="secondary" size="sm" onClick={() => openVerifyModal(seller)}>
+                        Manage / Verify
+                      </Button>
+                      <Button
+                        variant="danger"
+                        size="sm"
+                        icon={<Trash2 size={14} />}
+                        title="Remove Seller"
+                        onClick={() => {
+                          setSellerToDelete(seller)
+                          setIsDeleteModalOpen(true)
+                        }}
+                      >
+                        Remove
+                      </Button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -378,7 +417,7 @@ export const SellersPage: React.FC = () => {
             Change Verification Status:
           </p>
 
-          <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', marginBottom: '1.5rem' }}>
             <Button
               variant="success"
               isLoading={submitting}
@@ -403,6 +442,105 @@ export const SellersPage: React.FC = () => {
             >
               Reject KYC
             </Button>
+          </div>
+
+          <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <p style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--danger-text)', margin: 0 }}>
+                Super Admin Actions
+              </p>
+              <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: 0 }}>
+                Permanently delete this vendor and their shop listings
+              </p>
+            </div>
+            <Button
+              variant="danger"
+              size="sm"
+              icon={<Trash2 size={14} />}
+              onClick={() => {
+                setSellerToDelete(selectedSeller)
+                setIsDeleteModalOpen(true)
+              }}
+            >
+              Remove Seller
+            </Button>
+          </div>
+        </Modal>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {sellerToDelete && (
+        <Modal
+          isOpen={isDeleteModalOpen}
+          onClose={() => {
+            if (!isDeleting) {
+              setIsDeleteModalOpen(false)
+              setSellerToDelete(null)
+            }
+          }}
+          title="Remove Vendor Account"
+          size="sm"
+        >
+          <div style={{ textAlign: 'center', padding: '1rem 0' }}>
+            <div
+              style={{
+                width: 56,
+                height: 56,
+                borderRadius: '50%',
+                backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                color: 'var(--danger)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 1rem',
+              }}
+            >
+              <AlertTriangle size={28} />
+            </div>
+
+            <h3 style={{ fontSize: '1.125rem', fontWeight: 700, marginBottom: '0.5rem', color: 'var(--text-main)' }}>
+              Confirm Vendor Removal
+            </h3>
+
+            <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: '1.25rem', lineHeight: 1.5 }}>
+              Are you sure you want to remove <strong>{sellerToDelete.business_name}</strong> (Owner: {sellerToDelete.profile.full_name})?
+            </p>
+
+            <div
+              style={{
+                padding: '0.75rem 1rem',
+                backgroundColor: 'var(--bg-hover)',
+                borderRadius: 'var(--radius-md)',
+                fontSize: '0.8125rem',
+                color: 'var(--danger-text)',
+                border: '1px solid var(--danger-border)',
+                textAlign: 'left',
+                marginBottom: '1.5rem',
+              }}
+            >
+              <strong>⚠️ Warning:</strong> This action will permanently remove this seller, their registered shops, and product catalog items from BuyLanka.
+            </div>
+
+            <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
+              <Button
+                variant="secondary"
+                disabled={isDeleting}
+                onClick={() => {
+                  setIsDeleteModalOpen(false)
+                  setSellerToDelete(null)
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="danger"
+                isLoading={isDeleting}
+                icon={<Trash2 size={16} />}
+                onClick={handleDeleteSeller}
+              >
+                Yes, Remove Seller
+              </Button>
+            </div>
           </div>
         </Modal>
       )}

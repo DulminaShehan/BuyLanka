@@ -125,4 +125,27 @@ export const sellersService = {
     const { error } = await supabase.from('sellers').update(updates).eq('id', id)
     if (error) throw error
   },
+
+  async deleteSeller(id: string): Promise<void> {
+    // 1. Delete seller shops and products (if not automatically cascaded)
+    try {
+      await supabase.from('shops').delete().eq('seller_id', id)
+    } catch (err) {
+      console.warn('Notice when deleting associated shops:', err)
+    }
+
+    // 2. Delete from sellers table
+    const { error: sellerError } = await supabase.from('sellers').delete().eq('id', id)
+    if (sellerError) {
+      console.error('Error deleting seller record:', sellerError)
+      throw new Error(sellerError.message || 'Failed to delete seller record')
+    }
+
+    // 3. Delete from profiles table or reset profile role to customer
+    try {
+      await supabase.from('profiles').delete().eq('id', id)
+    } catch (profileErr) {
+      console.warn('Notice when cleaning profile for deleted seller:', profileErr)
+    }
+  },
 }
