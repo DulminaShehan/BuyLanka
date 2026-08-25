@@ -19,6 +19,8 @@ class AppColors {
   static const Color warningBg = Color(0xFFFFF3E0);
   static const Color danger = Color(0xFFD32F2F);
   static const Color dangerBg = Color(0xFFFFEBEE);
+  static const Color error = Color(0xFFD32F2F);
+  static const Color errorBg = Color(0xFFFFEBEE);
   static const Color info = Color(0xFF1976D2);
   static const Color infoBg = Color(0xFFE3F2FD);
 
@@ -32,6 +34,7 @@ class AppColors {
   // Typography
   static const Color textPrimary = Color(0xFF0F172A);
   static const Color textSecondary = Color(0xFF64748B);
+  static const Color textLight = Color(0xFF64748B);
   static const Color textMuted = Color(0xFF94A3B8);
   static const Color textOnPrimary = Color(0xFFFFFFFF);
 

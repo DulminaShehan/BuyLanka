@@ -14,7 +14,7 @@ class FakeAuthController extends StateNotifier<AuthStateData> implements AuthCon
 }
 
 void main() {
-  testWidgets('Renders Seller Login Screen when unauthenticated', (WidgetTester tester) async {
+  testWidgets('Renders Portal Login Screen when unauthenticated', (WidgetTester tester) async {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
@@ -24,7 +24,7 @@ void main() {
             );
           }),
         ],
-        child: const BuyLankaSellerApp(),
+        child: const BuyLankaApp(),
       ),
     );
 
@@ -32,7 +32,7 @@ void main() {
 
     // Verify login screen elements
     expect(find.byType(SellerLoginScreen), findsOneWidget);
-    expect(find.text('Merchant & Restaurant Portal'), findsOneWidget);
+    expect(find.text('Merchant & Delivery Rider Portal'), findsOneWidget);
     expect(find.byType(ElevatedButton), findsOneWidget);
   });
 }

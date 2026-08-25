@@ -1,6 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:buylanka/core/constants/supabase_constants.dart';
 import 'package:buylanka/models/profile_model.dart';
+import 'package:buylanka/models/rider_model.dart';
 import 'package:buylanka/models/seller_model.dart';
 import 'package:buylanka/services/supabase_service.dart';
 
@@ -39,7 +40,7 @@ class AuthRepository {
     if (profile.role != 'seller') {
       await _client.auth.signOut();
       throw AuthException(
-        'Access Denied: Account "${profile.email}" is registered as a ${profile.role}. This app is for verified Sellers & Restaurants only.',
+        'Access Denied: Account "${profile.email}" is registered as a ${profile.role}. This app portal is for verified Sellers & Restaurants only.',
       );
     }
 
@@ -48,6 +49,74 @@ class AuthRepository {
       throw const AuthException(
         'Account Suspended or Inactive. Please contact BuyLanka vendor support.',
       );
+    }
+
+    return profile;
+  }
+
+  /// Authenticate with email & password and ensure user is an approved Rider
+  Future<ProfileModel> signInRider({
+    required String email,
+    required String password,
+  }) async {
+    final response = await _client.auth.signInWithPassword(
+      email: email.trim(),
+      password: password,
+    );
+
+    final user = response.user;
+    if (user == null) {
+      throw const AuthException('Invalid login credentials');
+    }
+
+    // Verify role in public.profiles table
+    final profile = await getProfile(user.id);
+    if (profile == null) {
+      await _client.auth.signOut();
+      throw const AuthException('Rider profile not found. Please contact BuyLanka administration.');
+    }
+
+    if (profile.role != 'rider') {
+      await _client.auth.signOut();
+      throw AuthException(
+        'Access Denied: Account "${profile.email}" is registered as a ${profile.role}. This portal is for authorized Delivery Riders only.',
+      );
+    }
+
+    if (profile.status != 'active') {
+      await _client.auth.signOut();
+      throw const AuthException(
+        'Rider Account Suspended or Inactive. Please contact BuyLanka operations support.',
+      );
+    }
+
+    return profile;
+  }
+
+  /// General Sign In for any allowed staff/partner (Seller or Rider)
+  Future<ProfileModel> signInGeneric({
+    required String email,
+    required String password,
+  }) async {
+    final response = await _client.auth.signInWithPassword(
+      email: email.trim(),
+      password: password,
+    );
+
+    final user = response.user;
+    if (user == null) {
+      throw const AuthException('Invalid login credentials');
+    }
+
+    final profile = await getProfile(user.id);
+    if (profile == null) {
+      await _client.auth.signOut();
+      throw const AuthException('User profile record not found. Please contact administration.');
+    }
+
+    if (profile.status != 'active') {
+      await _client.auth.signOut();
+      throw const AuthException('Account is not active. Please contact administrator.');
     }
 
     return profile;
@@ -80,6 +149,22 @@ class AuthRepository {
 
       if (data == null) return null;
       return SellerModel.fromJson(data);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /// Get rider details
+  Future<RiderModel?> getRiderDetails(String riderId) async {
+    try {
+      final data = await _client
+          .from(SupabaseConstants.ridersTable)
+          .select('*, profile:${SupabaseConstants.profilesTable}!id(*)')
+          .eq('id', riderId)
+          .maybeSingle();
+
+      if (data == null) return null;
+      return RiderModel.fromJson(data);
     } catch (e) {
       return null;
     }

@@ -39,7 +39,7 @@ class _SellerLoginScreenState extends ConsumerState<SellerLoginScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(error),
-          backgroundColor: AppColors.danger,
+          backgroundColor: AppColors.error,
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -68,12 +68,12 @@ class _SellerLoginScreenState extends ConsumerState<SellerLoginScreen> {
                       width: 80,
                       height: 80,
                       decoration: BoxDecoration(
-                        color: AppColors.primarySurface,
+                        color: AppColors.primary.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(24),
                         border: Border.all(color: AppColors.primary.withValues(alpha: 0.2), width: 2),
                       ),
                       child: const Icon(
-                        Icons.storefront_rounded,
+                        Icons.delivery_dining_rounded,
                         size: 44,
                         color: AppColors.primary,
                       ),
@@ -93,33 +93,33 @@ class _SellerLoginScreenState extends ConsumerState<SellerLoginScreen> {
                   ),
                   const SizedBox(height: 6),
 
-                  Text(
-                    'Merchant & Restaurant Portal',
+                  const Text(
+                    'Merchant & Delivery Rider Portal',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 14,
-                      color: AppColors.textSecondary,
+                      color: AppColors.textLight,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
-                  const SizedBox(height: 36),
+                  const SizedBox(height: 30),
 
                   // Notice Box
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: AppColors.infoBg,
+                      color: AppColors.info.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(color: AppColors.info.withValues(alpha: 0.2)),
                     ),
-                    child: Row(
+                    child: const Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Icon(Icons.shield_outlined, size: 20, color: AppColors.info),
-                        const SizedBox(width: 10),
+                        Icon(Icons.shield_outlined, size: 20, color: AppColors.info),
+                        SizedBox(width: 10),
                         Expanded(
                           child: Text(
-                            'Seller accounts are registered and approved by BuyLanka administrators.',
+                            'Partner & Rider accounts are provisioned and authorized by BuyLanka Operations.',
                             style: TextStyle(
                               fontSize: 12.5,
                               color: AppColors.info,
@@ -134,8 +134,8 @@ class _SellerLoginScreenState extends ConsumerState<SellerLoginScreen> {
                   const SizedBox(height: 24),
 
                   // Email Input
-                  Text(
-                    'Registered Vendor Email',
+                  const Text(
+                    'Registered Email Address',
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
@@ -148,8 +148,8 @@ class _SellerLoginScreenState extends ConsumerState<SellerLoginScreen> {
                     keyboardType: TextInputType.emailAddress,
                     textInputAction: TextInputAction.next,
                     decoration: const InputDecoration(
-                      hintText: 'vendor@restaurant.lk',
-                      prefixIcon: Icon(Icons.email_outlined, color: AppColors.textMuted, size: 20),
+                      hintText: 'partner@buylanka.lk',
+                      prefixIcon: Icon(Icons.email_outlined, color: AppColors.textLight, size: 20),
                     ),
                     validator: (val) {
                       if (val == null || val.trim().isEmpty) {
@@ -164,7 +164,7 @@ class _SellerLoginScreenState extends ConsumerState<SellerLoginScreen> {
                   const SizedBox(height: 18),
 
                   // Password Input
-                  Text(
+                  const Text(
                     'Password',
                     style: TextStyle(
                       fontSize: 13,
@@ -180,11 +180,11 @@ class _SellerLoginScreenState extends ConsumerState<SellerLoginScreen> {
                     onFieldSubmitted: (_) => _handleLogin(),
                     decoration: InputDecoration(
                       hintText: '••••••••',
-                      prefixIcon: const Icon(Icons.lock_outline_rounded, color: AppColors.textMuted, size: 20),
+                      prefixIcon: const Icon(Icons.lock_outline_rounded, color: AppColors.textLight, size: 20),
                       suffixIcon: IconButton(
                         icon: Icon(
                           _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                          color: AppColors.textMuted,
+                          color: AppColors.textLight,
                           size: 20,
                         ),
                         onPressed: () {
@@ -206,6 +206,12 @@ class _SellerLoginScreenState extends ConsumerState<SellerLoginScreen> {
                   // Sign In Button
                   ElevatedButton(
                     onPressed: authState.isLoading ? null : _handleLogin,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
                     child: authState.isLoading
                         ? const SizedBox(
                             width: 22,
@@ -215,17 +221,20 @@ class _SellerLoginScreenState extends ConsumerState<SellerLoginScreen> {
                               strokeWidth: 2.5,
                             ),
                           )
-                        : const Text('Sign In to Shop Dashboard'),
+                        : const Text(
+                            'Sign In to Portal',
+                            style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                          ),
                   ),
                   const SizedBox(height: 24),
 
                   // Help Footer
-                  Center(
+                  const Center(
                     child: Text(
-                      'Need seller access? Contact support@buylanka.lk',
+                      'Need rider or seller access? Contact operations@buylanka.lk',
                       style: TextStyle(
                         fontSize: 12,
-                        color: AppColors.textMuted,
+                        color: AppColors.textLight,
                         fontWeight: FontWeight.w500,
                       ),
                     ),

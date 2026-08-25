@@ -15,4 +15,9 @@ class CurrencyFormatter {
     if (amount == null) return 'Rs. 0';
     return 'Rs. ${_compactFormatter.format(amount)}';
   }
+
+  /// Convenience alias for formatCompact (e.g. "Rs. 2,450")
+  static String formatLKR(num? amount) {
+    return formatCompact(amount);
+  }
 }
