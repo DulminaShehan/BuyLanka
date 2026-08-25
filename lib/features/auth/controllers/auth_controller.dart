@@ -29,6 +29,7 @@ class AuthStateData {
   });
 
   bool get isAuthenticated => profile != null && profile!.isActive;
+  bool get isCustomer => profile != null && profile!.role == 'customer' && profile!.isActive;
   bool get isSeller => profile != null && profile!.role == 'seller' && profile!.isActive;
   bool get isRider => profile != null && profile!.role == 'rider' && profile!.isActive;
 
@@ -69,7 +70,9 @@ class AuthController extends StateNotifier<AuthStateData> {
     try {
       final profile = await _authRepository.getProfile(user.id);
       if (profile != null && profile.isActive) {
-        if (profile.role == 'seller') {
+        if (profile.role == 'customer') {
+          state = state.copyWith(profile: profile, isLoading: false);
+        } else if (profile.role == 'seller') {
           final seller = await _authRepository.getSellerDetails(user.id);
           state = state.copyWith(profile: profile, seller: seller, isLoading: false);
         } else if (profile.role == 'rider') {
@@ -77,8 +80,7 @@ class AuthController extends StateNotifier<AuthStateData> {
           rider ??= await _riderRepository.createDefaultRiderRecord(riderId: user.id);
           state = state.copyWith(profile: profile, rider: rider, isLoading: false);
         } else {
-          await _authRepository.signOut();
-          state = state.copyWith(isLoading: false, clearUser: true);
+          state = state.copyWith(profile: profile, isLoading: false);
         }
       } else {
         await _authRepository.signOut();
@@ -89,7 +91,55 @@ class AuthController extends StateNotifier<AuthStateData> {
     }
   }
 
-  /// Universal Sign-In supporting both Sellers and Riders
+  /// Register Customer
+  Future<bool> signUpCustomer({
+    required String fullName,
+    required String email,
+    required String password,
+    String? phoneNumber,
+  }) async {
+    state = state.copyWith(isLoading: true, clearError: true);
+    try {
+      final profile = await _authRepository.signUpCustomer(
+        fullName: fullName,
+        email: email,
+        password: password,
+        phoneNumber: phoneNumber,
+      );
+      state = state.copyWith(profile: profile, isLoading: false, clearError: true);
+      return true;
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        errorMessage: e.toString().replaceAll('Exception: ', '').replaceAll('AuthException: ', ''),
+      );
+      return false;
+    }
+  }
+
+  /// Customer Sign-In
+  Future<bool> signInCustomer({
+    required String email,
+    required String password,
+  }) async {
+    state = state.copyWith(isLoading: true, clearError: true);
+    try {
+      final profile = await _authRepository.signInCustomer(
+        email: email,
+        password: password,
+      );
+      state = state.copyWith(profile: profile, isLoading: false, clearError: true);
+      return true;
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        errorMessage: e.toString().replaceAll('Exception: ', '').replaceAll('AuthException: ', ''),
+      );
+      return false;
+    }
+  }
+
+  /// Universal Sign-In supporting all roles
   Future<bool> signIn({
     required String email,
     required String password,
@@ -102,7 +152,10 @@ class AuthController extends StateNotifier<AuthStateData> {
         password: password,
       );
 
-      if (profile.role == 'seller') {
+      if (profile.role == 'customer') {
+        state = state.copyWith(profile: profile, isLoading: false, clearError: true);
+        return true;
+      } else if (profile.role == 'seller') {
         final seller = await _authRepository.getSellerDetails(profile.id);
         state = state.copyWith(
           profile: profile,
@@ -122,12 +175,8 @@ class AuthController extends StateNotifier<AuthStateData> {
         );
         return true;
       } else {
-        await _authRepository.signOut();
-        state = state.copyWith(
-          isLoading: false,
-          errorMessage: 'Access Denied: This app portal is for Sellers and Delivery Riders only.',
-        );
-        return false;
+        state = state.copyWith(profile: profile, isLoading: false, clearError: true);
+        return true;
       }
     } catch (e) {
       state = state.copyWith(
@@ -170,12 +219,32 @@ class AuthController extends StateNotifier<AuthStateData> {
     }
   }
 
+  Future<void> updateProfile({
+    String? fullName,
+    String? phoneNumber,
+    String? avatarUrl,
+  }) async {
+    final user = _authRepository.currentUser;
+    if (user == null) return;
+
+    await _authRepository.updateProfile(
+      userId: user.id,
+      fullName: fullName,
+      phoneNumber: phoneNumber,
+      avatarUrl: avatarUrl,
+    );
+
+    await refreshProfile();
+  }
+
   Future<void> refreshProfile() async {
     final user = _authRepository.currentUser;
     if (user == null) return;
 
     final profile = await _authRepository.getProfile(user.id);
-    if (profile?.role == 'seller') {
+    if (profile?.role == 'customer') {
+      state = state.copyWith(profile: profile);
+    } else if (profile?.role == 'seller') {
       final seller = await _authRepository.getSellerDetails(user.id);
       state = state.copyWith(profile: profile, seller: seller);
     } else if (profile?.role == 'rider') {
