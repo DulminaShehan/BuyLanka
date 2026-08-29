@@ -1,5 +1,6 @@
-import 'order_item_model.dart';
-import 'profile_model.dart';
+import 'package:buylanka/models/order_item_model.dart';
+import 'package:buylanka/models/profile_model.dart';
+import 'package:buylanka/models/shop_model.dart';
 
 class OrderModel {
   final String id;
@@ -17,6 +18,7 @@ class OrderModel {
   final DateTime? createdAt;
   final List<OrderItemModel> items;
   final ProfileModel? customer;
+  final ShopModel? shop;
 
   const OrderModel({
     required this.id,
@@ -34,6 +36,7 @@ class OrderModel {
     this.createdAt,
     this.items = const [],
     this.customer,
+    this.shop,
   });
 
   String get customerName {
@@ -91,6 +94,7 @@ class OrderModel {
       createdAt: json['created_at'] != null ? DateTime.tryParse(json['created_at'].toString()) : null,
       items: parsedItems,
       customer: json['customer'] != null ? ProfileModel.fromJson(json['customer'] as Map<String, dynamic>) : null,
+      shop: json['shop'] != null ? ShopModel.fromJson(json['shop'] as Map<String, dynamic>) : null,
     );
   }
 
@@ -98,6 +102,7 @@ class OrderModel {
     String? orderStatus,
     String? paymentStatus,
     List<OrderItemModel>? items,
+    ShopModel? shop,
   }) {
     return OrderModel(
       id: id,
@@ -115,6 +120,7 @@ class OrderModel {
       createdAt: createdAt,
       items: items ?? this.items,
       customer: customer,
+      shop: shop ?? this.shop,
     );
   }
 }

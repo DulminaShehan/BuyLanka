@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'core/constants/app_constants.dart';
-import 'core/theme/app_theme.dart';
-import 'features/auth/controllers/auth_controller.dart';
-import 'features/auth/presentation/seller_login_screen.dart';
-import 'features/seller/presentation/seller_main_nav_screen.dart';
-import 'services/supabase_service.dart';
+import 'package:buylanka/core/constants/app_constants.dart';
+import 'package:buylanka/core/theme/app_theme.dart';
+import 'package:buylanka/features/auth/controllers/auth_controller.dart';
+import 'package:buylanka/features/auth/presentation/customer_auth_screen.dart';
+import 'package:buylanka/features/customer/presentation/customer_main_nav_screen.dart';
+import 'package:buylanka/features/rider/presentation/rider_main_nav_screen.dart';
+import 'package:buylanka/features/seller/presentation/seller_main_nav_screen.dart';
+import 'package:buylanka/services/supabase_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -27,13 +29,13 @@ void main() async {
 
   runApp(
     const ProviderScope(
-      child: BuyLankaSellerApp(),
+      child: BuyLankaApp(),
     ),
   );
 }
 
-class BuyLankaSellerApp extends ConsumerWidget {
-  const BuyLankaSellerApp({super.key});
+class BuyLankaApp extends ConsumerWidget {
+  const BuyLankaApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -50,8 +52,12 @@ class BuyLankaSellerApp extends ConsumerWidget {
               ),
             )
           : authState.isAuthenticated
-              ? const SellerMainNavScreen()
-              : const SellerLoginScreen(),
+              ? (authState.isCustomer
+                  ? const CustomerMainNavScreen()
+                  : (authState.isRider
+                      ? const RiderMainNavScreen()
+                      : const SellerMainNavScreen()))
+              : const CustomerAuthScreen(),
     );
   }
 }
