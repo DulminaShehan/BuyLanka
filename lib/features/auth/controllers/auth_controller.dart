@@ -117,6 +117,72 @@ class AuthController extends StateNotifier<AuthStateData> {
     }
   }
 
+  /// Register Restaurant / Seller Partner (Pending Super Admin Approval)
+  Future<bool> signUpSeller({
+    required String fullName,
+    required String email,
+    required String password,
+    required String shopName,
+    String? phoneNumber,
+    String? address,
+    String? city,
+    String? district,
+  }) async {
+    state = state.copyWith(isLoading: true, clearError: true);
+    try {
+      await _authRepository.signUpSeller(
+        fullName: fullName,
+        email: email,
+        password: password,
+        shopName: shopName,
+        phoneNumber: phoneNumber,
+        address: address,
+        city: city,
+        district: district,
+      );
+      state = state.copyWith(isLoading: false, clearError: true, clearUser: true);
+      return true;
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        errorMessage: e.toString().replaceAll('Exception: ', '').replaceAll('AuthException: ', ''),
+      );
+      return false;
+    }
+  }
+
+  /// Register Delivery Rider Partner (Pending Super Admin Approval)
+  Future<bool> signUpRider({
+    required String fullName,
+    required String email,
+    required String password,
+    required String vehicleType,
+    required String vehicleNumber,
+    String? drivingLicenseNumber,
+    String? phoneNumber,
+  }) async {
+    state = state.copyWith(isLoading: true, clearError: true);
+    try {
+      await _authRepository.signUpRider(
+        fullName: fullName,
+        email: email,
+        password: password,
+        vehicleType: vehicleType,
+        vehicleNumber: vehicleNumber,
+        drivingLicenseNumber: drivingLicenseNumber,
+        phoneNumber: phoneNumber,
+      );
+      state = state.copyWith(isLoading: false, clearError: true, clearUser: true);
+      return true;
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        errorMessage: e.toString().replaceAll('Exception: ', '').replaceAll('AuthException: ', ''),
+      );
+      return false;
+    }
+  }
+
   /// Customer Sign-In
   Future<bool> signInCustomer({
     required String email,

@@ -179,13 +179,14 @@ class _CustomerSearchScreenState extends ConsumerState<CustomerSearchScreen> {
   }
 
   Widget _buildShopCard(ShopModel shop) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      decoration: BoxDecoration(
-        color: Colors.white,
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(14),
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.border),
+        side: const BorderSide(color: AppColors.border),
       ),
+      clipBehavior: Clip.antiAlias,
       child: ListTile(
         onTap: () {
           Navigator.of(context).push(
@@ -216,13 +217,14 @@ class _CustomerSearchScreenState extends ConsumerState<CustomerSearchScreen> {
   }
 
   Widget _buildProductCard(ProductModel product) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      decoration: BoxDecoration(
-        color: Colors.white,
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(14),
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.border),
+        side: const BorderSide(color: AppColors.border),
       ),
+      clipBehavior: Clip.antiAlias,
       child: ListTile(
         onTap: () {
           // Open shop

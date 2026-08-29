@@ -58,6 +58,171 @@ class AuthRepository {
     );
   }
 
+  /// Register a new Restaurant / Seller Partner account (Pending Admin Approval)
+  Future<ProfileModel> signUpSeller({
+    required String fullName,
+    required String email,
+    required String password,
+    required String shopName,
+    String? phoneNumber,
+    String? address,
+    String? city,
+    String? district,
+  }) async {
+    final response = await _client.auth.signUp(
+      email: email.trim(),
+      password: password,
+      data: {
+        'full_name': fullName.trim(),
+        'phone_number': phoneNumber?.trim(),
+        'role': 'seller',
+      },
+    );
+
+    final user = response.user;
+    if (user == null) {
+      throw const AuthException('Seller registration failed');
+    }
+
+    // 1. Upsert Profile with active status
+    await _client.from(SupabaseConstants.profilesTable).upsert({
+      'id': user.id,
+      'full_name': fullName.trim(),
+      'email': email.trim(),
+      'phone_number': phoneNumber?.trim(),
+      'role': 'seller',
+      'status': 'active',
+    });
+
+    // 2. Insert Seller record with verified status
+    await _client.from(SupabaseConstants.sellersTable).upsert({
+      'id': user.id,
+      'business_name': shopName.trim(),
+      'verification_status': 'verified',
+      'commission_rate': 10.00,
+    });
+
+    // 3. Insert default Shop with approved status and location
+    final slug = '${shopName.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '-')}-${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}';
+    await _client.from(SupabaseConstants.shopsTable).insert({
+      'seller_id': user.id,
+      'name': shopName.trim(),
+      'slug': slug,
+      'status': 'approved',
+      'contact_phone': phoneNumber?.trim(),
+      'address': address?.trim(),
+      'city': city?.trim(),
+      'district': district?.trim(),
+    });
+
+    // 4. Send Notification to Admin Panel
+    try {
+      final locParts = [
+        if (address != null && address.trim().isNotEmpty) address.trim(),
+        if (city != null && city.trim().isNotEmpty) city.trim(),
+        if (district != null && district.trim().isNotEmpty) district.trim(),
+      ];
+      final locText = locParts.join(', ');
+
+      await _client.from(SupabaseConstants.notificationsTable).insert({
+        'title': 'New Restaurant Registered 🏪',
+        'message': '$fullName registered restaurant "$shopName" ($email, ${phoneNumber ?? 'No phone'})${locText.isNotEmpty ? ' located at $locText' : ''}.',
+        'type': 'seller_application',
+        'data': {
+          'seller_id': user.id,
+          'shop_name': shopName,
+          'owner_name': fullName,
+          'email': email,
+          'phone': phoneNumber,
+          'address': address,
+          'city': city,
+          'district': district,
+        },
+      });
+    } catch (_) {}
+
+    return ProfileModel(
+      id: user.id,
+      fullName: fullName,
+      email: email,
+      phoneNumber: phoneNumber,
+      role: 'seller',
+      status: 'active',
+    );
+  }
+
+  /// Register a new Delivery Rider account
+  Future<ProfileModel> signUpRider({
+    required String fullName,
+    required String email,
+    required String password,
+    required String vehicleType,
+    required String vehicleNumber,
+    String? drivingLicenseNumber,
+    String? phoneNumber,
+  }) async {
+    final response = await _client.auth.signUp(
+      email: email.trim(),
+      password: password,
+      data: {
+        'full_name': fullName.trim(),
+        'phone_number': phoneNumber?.trim(),
+        'role': 'rider',
+      },
+    );
+
+    final user = response.user;
+    if (user == null) {
+      throw const AuthException('Rider registration failed');
+    }
+
+    // 1. Upsert Profile with active status
+    await _client.from(SupabaseConstants.profilesTable).upsert({
+      'id': user.id,
+      'full_name': fullName.trim(),
+      'email': email.trim(),
+      'phone_number': phoneNumber?.trim(),
+      'role': 'rider',
+      'status': 'active',
+    });
+
+    // 2. Insert Rider record with verified status
+    await _client.from(SupabaseConstants.ridersTable).upsert({
+      'id': user.id,
+      'vehicle_type': vehicleType.toLowerCase() == 'scooter' ? 'motorcycle' : vehicleType.toLowerCase(),
+      'vehicle_number': vehicleNumber.trim().toUpperCase(),
+      'driving_license_number': drivingLicenseNumber?.trim().toUpperCase() ?? 'B${DateTime.now().millisecondsSinceEpoch.toString().substring(6)}',
+      'availability_status': 'offline',
+      'verification_status': 'approved',
+    });
+
+    // 3. Send Notification to Admin Panel
+    try {
+      await _client.from(SupabaseConstants.notificationsTable).insert({
+        'title': 'New Delivery Rider Registered 🛵',
+        'message': '$fullName registered as Rider (Vehicle: $vehicleType - ${vehicleNumber.toUpperCase()}, Phone: ${phoneNumber ?? 'N/A'}).',
+        'type': 'rider_application',
+        'data': {
+          'rider_id': user.id,
+          'name': fullName,
+          'email': email,
+          'phone': phoneNumber,
+          'vehicle_type': vehicleType,
+          'vehicle_number': vehicleNumber,
+        },
+      });
+    } catch (_) {}
+
+    return ProfileModel(
+      id: user.id,
+      fullName: fullName,
+      email: email,
+      phoneNumber: phoneNumber,
+      role: 'rider',
+      status: 'active',
+    );
+  }
+
   /// Authenticate Customer
   Future<ProfileModel> signInCustomer({
     required String email,
@@ -115,14 +280,22 @@ class AuthRepository {
     if (profile.role != 'seller') {
       await _client.auth.signOut();
       throw AuthException(
-        'Access Denied: Account "${profile.email}" is registered as a ${profile.role}. This app portal is for verified Sellers & Restaurants only.',
+        'Access Denied: Account "${profile.email}" is registered as a ${profile.role}. This portal is for verified Sellers & Restaurants only.',
       );
     }
 
-    if (profile.status != 'active') {
+    final seller = await getSellerDetails(user.id);
+    if (profile.status == 'pending' || (seller != null && seller.verificationStatus == 'pending')) {
       await _client.auth.signOut();
       throw const AuthException(
-        'Account Suspended or Inactive. Please contact BuyLanka vendor support.',
+        'Your Restaurant partner account is currently PENDING Super Admin approval. Please wait for operations verification.',
+      );
+    }
+
+    if (profile.status != 'active' || (seller != null && seller.verificationStatus != 'verified')) {
+      await _client.auth.signOut();
+      throw const AuthException(
+        'Account Suspended or Rejected. Please contact BuyLanka vendor support (operations@buylanka.lk).',
       );
     }
 
@@ -158,10 +331,18 @@ class AuthRepository {
       );
     }
 
-    if (profile.status != 'active') {
+    final rider = await getRiderDetails(user.id);
+    if (profile.status == 'pending' || (rider != null && rider.verificationStatus == 'pending')) {
       await _client.auth.signOut();
       throw const AuthException(
-        'Rider Account Suspended or Inactive. Please contact BuyLanka operations support.',
+        'Your Delivery Rider account is currently PENDING Super Admin approval. Operations will verify your vehicle & license.',
+      );
+    }
+
+    if (profile.status != 'active' || (rider != null && rider.verificationStatus != 'approved')) {
+      await _client.auth.signOut();
+      throw const AuthException(
+        'Rider Account Suspended or Rejected. Please contact BuyLanka operations support.',
       );
     }
 
@@ -197,9 +378,28 @@ class AuthRepository {
       profile = await getProfile(user.id);
     }
 
-    if (profile!.status != 'active') {
+    // Check pending status for sellers & riders
+    if (profile!.role == 'seller') {
+      final seller = await getSellerDetails(user.id);
+      if (profile.status == 'pending' || (seller != null && seller.verificationStatus == 'pending')) {
+        await _client.auth.signOut();
+        throw const AuthException(
+          'Your Restaurant account is currently PENDING Super Admin approval. You will receive access once approved by BuyLanka.',
+        );
+      }
+    } else if (profile.role == 'rider') {
+      final rider = await getRiderDetails(user.id);
+      if (profile.status == 'pending' || (rider != null && rider.verificationStatus == 'pending')) {
+        await _client.auth.signOut();
+        throw const AuthException(
+          'Your Delivery Rider application is currently PENDING Super Admin approval and vehicle inspection.',
+        );
+      }
+    }
+
+    if (profile.status != 'active') {
       await _client.auth.signOut();
-      throw const AuthException('Account is not active. Please contact administrator.');
+      throw const AuthException('Account is not active or has been suspended. Please contact administrator.');
     }
 
     return profile;

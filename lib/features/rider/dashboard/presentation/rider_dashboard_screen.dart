@@ -26,6 +26,48 @@ class RiderDashboardScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_rounded, color: AppColors.textPrimary),
+          tooltip: 'Exit Rider Portal',
+          onPressed: () async {
+            final confirm = await showDialog<bool>(
+              context: context,
+              builder: (ctx) => AlertDialog(
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                title: const Row(
+                  children: [
+                    Icon(Icons.logout_rounded, color: AppColors.primary),
+                    SizedBox(width: 8),
+                    Text('Exit Rider Portal', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  ],
+                ),
+                content: const Text(
+                  'Do you want to sign out from your rider account and return to the main customer app?',
+                  style: TextStyle(fontSize: 13, height: 1.4),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(ctx, false),
+                    child: const Text('Cancel'),
+                  ),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF1B5E20),
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                    onPressed: () => Navigator.pop(ctx, true),
+                    child: const Text('Exit & Sign Out'),
+                  ),
+                ],
+              ),
+            );
+
+            if (confirm == true) {
+              await ref.read(authControllerProvider.notifier).signOut();
+            }
+          },
+        ),
         title: Row(
           children: [
             Container(

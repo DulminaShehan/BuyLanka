@@ -80,12 +80,14 @@ class CustomerProfileScreen extends ConsumerWidget {
             const SizedBox(height: 20),
 
             // 2. Options List
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
+            Material(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: AppColors.border),
+                side: const BorderSide(color: AppColors.border),
               ),
+              clipBehavior: Clip.antiAlias,
               child: Column(
                 children: [
                   _buildProfileTile(
