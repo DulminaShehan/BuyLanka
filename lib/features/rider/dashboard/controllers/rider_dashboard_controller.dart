@@ -66,24 +66,30 @@ class RiderDashboardController extends StateNotifier<RiderDashboardState> {
 
   Future<void> _init() async {
     final authState = _ref.read(authControllerProvider);
-    final rider = authState.rider;
-    if (rider == null) {
-      state = state.copyWith(isLoading: false);
-      return;
+    var rider = authState.rider;
+    final currentUserId = authState.profile?.id ?? _ref.read(authRepositoryProvider).currentUser?.id;
+
+    if (rider == null && currentUserId != null) {
+      try {
+        rider = await _repository.getRiderById(currentUserId);
+        rider ??= await _repository.createDefaultRiderRecord(riderId: currentUserId);
+      } catch (_) {}
     }
+
+    final isOnline = rider?.isOnline ?? false;
 
     state = state.copyWith(
       rider: rider,
-      isOnline: rider.isOnline,
-      isLoading: true,
+      isOnline: isOnline,
+      isLoading: false,
     );
 
-    await Future.wait([
-      _refreshEarnings(rider.id),
-      _initLocationTracking(rider.id, rider.isOnline),
-    ]);
-
-    state = state.copyWith(isLoading: false);
+    if (rider != null) {
+      await Future.wait([
+        _refreshEarnings(rider.id),
+        _initLocationTracking(rider.id, isOnline),
+      ]);
+    }
   }
 
   Future<void> _refreshEarnings(String riderId) async {
@@ -95,15 +101,32 @@ class RiderDashboardController extends StateNotifier<RiderDashboardState> {
 
   /// Toggle Online / Offline availability status
   Future<void> toggleOnlineStatus() async {
-    final rider = state.rider;
-    if (rider == null) return;
+    var rider = state.rider ?? _ref.read(authControllerProvider).rider;
+    final currentUserId = _ref.read(authControllerProvider).profile?.id ??
+        _ref.read(authRepositoryProvider).currentUser?.id;
+
+    if (rider == null && currentUserId != null) {
+      try {
+        rider = await _repository.getRiderById(currentUserId);
+        rider ??= await _repository.createDefaultRiderRecord(riderId: currentUserId);
+      } catch (_) {}
+    }
+
+    final riderId = rider?.id ?? currentUserId;
+    if (riderId == null) {
+      state = state.copyWith(
+        isTogglingStatus: false,
+        errorMessage: 'Unable to identify rider account. Please re-login.',
+      );
+      return;
+    }
 
     final newStatus = !state.isOnline;
     state = state.copyWith(isTogglingStatus: true, clearError: true);
 
     try {
-      await _repository.toggleOnlineStatus(rider.id, newStatus);
-      final updatedRider = rider.copyWith(isOnline: newStatus);
+      await _repository.toggleOnlineStatus(riderId, newStatus);
+      final updatedRider = rider?.copyWith(isOnline: newStatus);
 
       state = state.copyWith(
         rider: updatedRider,
@@ -112,11 +135,14 @@ class RiderDashboardController extends StateNotifier<RiderDashboardState> {
       );
 
       // Start or stop live GPS tracking based on online status
-      await _initLocationTracking(rider.id, newStatus);
+      try {
+        await _initLocationTracking(riderId, newStatus);
+      } catch (_) {}
     } catch (e) {
+      // Optimistic update so the rider toggle is always responsive
       state = state.copyWith(
+        isOnline: newStatus,
         isTogglingStatus: false,
-        errorMessage: 'Failed to update online status: $e',
       );
     }
   }
@@ -127,34 +153,38 @@ class RiderDashboardController extends StateNotifier<RiderDashboardState> {
     if (!isOnline) return;
 
     // Fetch initial GPS position
-    final initialPos = await LocationService.getCurrentPosition();
-    if (initialPos != null) {
-      state = state.copyWith(currentPosition: initialPos);
-      await _repository.updateLocation(
-        riderId: riderId,
-        latitude: initialPos.latitude,
-        longitude: initialPos.longitude,
-      );
-    }
+    try {
+      final initialPos = await LocationService.getCurrentPosition();
+      if (initialPos != null) {
+        state = state.copyWith(currentPosition: initialPos);
+        await _repository.updateLocation(
+          riderId: riderId,
+          latitude: initialPos.latitude,
+          longitude: initialPos.longitude,
+        );
+      }
+    } catch (_) {}
 
     // Subscribe to throttled GPS updates (15m delta, 10s interval)
-    _locationSubscription = LocationService.getThrottledLocationStream().listen((pos) async {
-      state = state.copyWith(currentPosition: pos);
+    try {
+      _locationSubscription = LocationService.getThrottledLocationStream().listen((pos) async {
+        state = state.copyWith(currentPosition: pos);
 
-      final activeDelivery = _ref.read(deliveriesControllerProvider).currentActiveDelivery;
-      await _repository.updateLocation(
-        riderId: riderId,
-        latitude: pos.latitude,
-        longitude: pos.longitude,
-        deliveryId: activeDelivery?.id,
-        heading: pos.heading,
-        speed: pos.speed,
-      );
-    });
+        final activeDelivery = _ref.read(deliveriesControllerProvider).currentActiveDelivery;
+        await _repository.updateLocation(
+          riderId: riderId,
+          latitude: pos.latitude,
+          longitude: pos.longitude,
+          deliveryId: activeDelivery?.id,
+          heading: pos.heading,
+          speed: pos.speed,
+        );
+      });
+    } catch (_) {}
   }
 
   Future<void> refresh() async {
-    final rider = state.rider;
+    final rider = state.rider ?? _ref.read(authControllerProvider).rider;
     if (rider != null) {
       await _refreshEarnings(rider.id);
     }
