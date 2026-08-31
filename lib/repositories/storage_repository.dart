@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:typed_data';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -7,6 +8,38 @@ class StorageRepository {
   final SupabaseClient _client;
 
   StorageRepository([SupabaseClient? client]) : _client = client ?? SupabaseService.client;
+
+  Future<String?> uploadAvatar({
+    required XFile file,
+    required String userId,
+  }) async {
+    final bytes = await file.readAsBytes();
+    final fileExt = file.name.split('.').last.toLowerCase();
+    final fileName = 'avatar_${userId}_${DateTime.now().millisecondsSinceEpoch}.$fileExt';
+    final contentType = _getContentType(fileExt);
+
+    // 1. Try common Supabase Storage bucket names
+    final candidateBuckets = ['avatars', 'profiles', 'public', 'images'];
+    for (final bucket in candidateBuckets) {
+      try {
+        await _client.storage.from(bucket).uploadBinary(
+          fileName,
+          bytes,
+          fileOptions: FileOptions(
+            contentType: contentType,
+            upsert: true,
+          ),
+        );
+        return _client.storage.from(bucket).getPublicUrl(fileName);
+      } catch (_) {
+        // Try next candidate bucket
+      }
+    }
+
+    // 2. Fallback: Return Base64 Data URI if storage bucket hasn't been created yet
+    final base64String = base64Encode(bytes);
+    return 'data:$contentType;base64,$base64String';
+  }
 
   Future<String?> uploadImage({
     required String bucket,

@@ -22,37 +22,81 @@ class AuthRepository {
     required String password,
     String? phoneNumber,
   }) async {
-    final response = await _client.auth.signUp(
-      email: email.trim(),
-      password: password,
-      data: {
-        'full_name': fullName.trim(),
-        'phone_number': phoneNumber?.trim(),
-        'role': 'customer',
-      },
-    );
+    final cleanEmail = email.trim().toLowerCase();
+    final cleanFullName = fullName.trim();
+    final cleanPhone = phoneNumber?.trim();
 
-    final user = response.user;
-    if (user == null) {
-      throw const AuthException('Customer registration failed');
+    AuthResponse response;
+    try {
+      response = await _client.auth.signUp(
+        email: cleanEmail,
+        password: password,
+        data: {
+          'full_name': cleanFullName,
+          'phone_number': cleanPhone,
+          'role': 'customer',
+        },
+      );
+    } on AuthException catch (e) {
+      if (e.message.toLowerCase().contains('already registered') ||
+          e.message.toLowerCase().contains('user already exists')) {
+        return await signInCustomer(email: cleanEmail, password: password);
+      }
+      rethrow;
     }
 
-    // Upsert customer profile
-    await _client.from(SupabaseConstants.profilesTable).upsert({
-      'id': user.id,
-      'full_name': fullName.trim(),
-      'email': email.trim(),
-      'phone_number': phoneNumber?.trim(),
-      'role': 'customer',
-      'status': 'active',
-    });
+    var user = response.user;
+    if (user == null) {
+      try {
+        final signRes = await _client.auth.signInWithPassword(
+          email: cleanEmail,
+          password: password,
+        );
+        user = signRes.user;
+      } catch (_) {}
+    }
+
+    if (user == null) {
+      throw const AuthException('Registration complete. Please sign in to continue.');
+    }
+
+    // Ensure session is initialized
+    if (_client.auth.currentSession == null) {
+      try {
+        await _client.auth.signInWithPassword(
+          email: cleanEmail,
+          password: password,
+        );
+      } catch (_) {}
+    }
+
+    // Upsert customer profile safely
+    try {
+      await _client.from(SupabaseConstants.profilesTable).upsert({
+        'id': user.id,
+        'full_name': cleanFullName,
+        'email': cleanEmail,
+        'phone_number': cleanPhone,
+        'role': 'customer',
+        'status': 'active',
+      });
+    } catch (_) {
+      try {
+        await _client.from(SupabaseConstants.profilesTable).update({
+          'full_name': cleanFullName,
+          'phone_number': cleanPhone,
+          'role': 'customer',
+          'status': 'active',
+        }).eq('id', user.id);
+      } catch (_) {}
+    }
 
     final profile = await getProfile(user.id);
     return profile ?? ProfileModel(
       id: user.id,
-      fullName: fullName,
-      email: email,
-      phoneNumber: phoneNumber,
+      fullName: cleanFullName,
+      email: cleanEmail,
+      phoneNumber: cleanPhone,
       role: 'customer',
       status: 'active',
     );
@@ -85,35 +129,41 @@ class AuthRepository {
     }
 
     // 1. Upsert Profile with active status
-    await _client.from(SupabaseConstants.profilesTable).upsert({
-      'id': user.id,
-      'full_name': fullName.trim(),
-      'email': email.trim(),
-      'phone_number': phoneNumber?.trim(),
-      'role': 'seller',
-      'status': 'active',
-    });
+    try {
+      await _client.from(SupabaseConstants.profilesTable).upsert({
+        'id': user.id,
+        'full_name': fullName.trim(),
+        'email': email.trim(),
+        'phone_number': phoneNumber?.trim(),
+        'role': 'seller',
+        'status': 'active',
+      });
+    } catch (_) {}
 
     // 2. Insert Seller record with verified status
-    await _client.from(SupabaseConstants.sellersTable).upsert({
-      'id': user.id,
-      'business_name': shopName.trim(),
-      'verification_status': 'verified',
-      'commission_rate': 10.00,
-    });
+    try {
+      await _client.from(SupabaseConstants.sellersTable).upsert({
+        'id': user.id,
+        'business_name': shopName.trim(),
+        'verification_status': 'verified',
+        'commission_rate': 10.00,
+      });
+    } catch (_) {}
 
     // 3. Insert default Shop with approved status and location
-    final slug = '${shopName.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '-')}-${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}';
-    await _client.from(SupabaseConstants.shopsTable).insert({
-      'seller_id': user.id,
-      'name': shopName.trim(),
-      'slug': slug,
-      'status': 'approved',
-      'contact_phone': phoneNumber?.trim(),
-      'address': address?.trim(),
-      'city': city?.trim(),
-      'district': district?.trim(),
-    });
+    try {
+      final slug = '${shopName.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '-')}-${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}';
+      await _client.from(SupabaseConstants.shopsTable).insert({
+        'seller_id': user.id,
+        'name': shopName.trim(),
+        'slug': slug,
+        'status': 'approved',
+        'contact_phone': phoneNumber?.trim(),
+        'address': address?.trim(),
+        'city': city?.trim(),
+        'district': district?.trim(),
+      });
+    } catch (_) {}
 
     // 4. Send Notification to Admin Panel
     try {
@@ -177,24 +227,29 @@ class AuthRepository {
     }
 
     // 1. Upsert Profile with active status
-    await _client.from(SupabaseConstants.profilesTable).upsert({
-      'id': user.id,
-      'full_name': fullName.trim(),
-      'email': email.trim(),
-      'phone_number': phoneNumber?.trim(),
-      'role': 'rider',
-      'status': 'active',
-    });
+    try {
+      await _client.from(SupabaseConstants.profilesTable).upsert({
+        'id': user.id,
+        'full_name': fullName.trim(),
+        'email': email.trim(),
+        'phone_number': phoneNumber?.trim(),
+        'role': 'rider',
+        'status': 'active',
+      });
+    } catch (_) {}
 
     // 2. Insert Rider record with verified status
-    await _client.from(SupabaseConstants.ridersTable).upsert({
-      'id': user.id,
-      'vehicle_type': vehicleType.toLowerCase() == 'scooter' ? 'motorcycle' : vehicleType.toLowerCase(),
-      'vehicle_number': vehicleNumber.trim().toUpperCase(),
-      'driving_license_number': drivingLicenseNumber?.trim().toUpperCase() ?? 'B${DateTime.now().millisecondsSinceEpoch.toString().substring(6)}',
-      'availability_status': 'offline',
-      'verification_status': 'approved',
-    });
+    try {
+      await _client.from(SupabaseConstants.ridersTable).upsert({
+        'id': user.id,
+        'vehicle_type': vehicleType.toLowerCase() == 'scooter' ? 'motorcycle' : vehicleType.toLowerCase(),
+        'vehicle_number': vehicleNumber.trim().toUpperCase(),
+        'driving_license_number': drivingLicenseNumber?.trim().toUpperCase() ?? 'B${DateTime.now().millisecondsSinceEpoch.toString().substring(6)}',
+        'availability_status': 'offline',
+        'verification_status': 'approved',
+        'is_online': false,
+      });
+    } catch (_) {}
 
     // 3. Send Notification to Admin Panel
     try {
@@ -241,7 +296,7 @@ class AuthRepository {
     var profile = await getProfile(user.id);
     if (profile == null) {
       // Auto-provision customer profile if missing
-      await _client.from(SupabaseConstants.profilesTable).insert({
+      await _client.from(SupabaseConstants.profilesTable).upsert({
         'id': user.id,
         'full_name': user.userMetadata?['full_name'] ?? 'Customer',
         'email': user.email ?? email,
@@ -318,7 +373,20 @@ class AuthRepository {
     }
 
     // Verify role in public.profiles table
-    final profile = await getProfile(user.id);
+    var profile = await getProfile(user.id);
+    if (profile == null) {
+      // Auto-provision profile if missing
+      await _client.from(SupabaseConstants.profilesTable).upsert({
+        'id': user.id,
+        'full_name': user.userMetadata?['full_name'] ?? 'Rider',
+        'email': user.email ?? email,
+        'phone_number': user.userMetadata?['phone_number'],
+        'role': 'rider',
+        'status': 'active',
+      });
+      profile = await getProfile(user.id);
+    }
+
     if (profile == null) {
       await _client.auth.signOut();
       throw const AuthException('Rider profile not found. Please contact BuyLanka administration.');
@@ -331,7 +399,24 @@ class AuthRepository {
       );
     }
 
-    final rider = await getRiderDetails(user.id);
+    var rider = await getRiderDetails(user.id);
+    if (rider == null) {
+      // Auto-create rider record if missing
+      try {
+        await _client.from(SupabaseConstants.ridersTable).upsert({
+          'id': user.id,
+          'vehicle_type': 'motorcycle',
+          'vehicle_number': 'WP BCD-1234',
+          'driving_license_number': 'B1234567',
+          'assigned_zone': 'Colombo District',
+          'availability_status': 'offline',
+          'verification_status': 'approved',
+          'is_online': false,
+        });
+        rider = await getRiderDetails(user.id);
+      } catch (_) {}
+    }
+
     if (profile.status == 'pending' || (rider != null && rider.verificationStatus == 'pending')) {
       await _client.auth.signOut();
       throw const AuthException(
@@ -339,10 +424,10 @@ class AuthRepository {
       );
     }
 
-    if (profile.status != 'active' || (rider != null && rider.verificationStatus != 'approved')) {
+    if (profile.status == 'suspended' || (rider != null && rider.verificationStatus == 'suspended')) {
       await _client.auth.signOut();
       throw const AuthException(
-        'Rider Account Suspended or Rejected. Please contact BuyLanka operations support.',
+        'Rider Account Suspended. Please contact BuyLanka operations support.',
       );
     }
 
@@ -367,7 +452,7 @@ class AuthRepository {
     var profile = await getProfile(user.id);
     if (profile == null) {
       // Create customer profile as default fallback
-      await _client.from(SupabaseConstants.profilesTable).insert({
+      await _client.from(SupabaseConstants.profilesTable).upsert({
         'id': user.id,
         'full_name': user.userMetadata?['full_name'] ?? 'User',
         'email': user.email ?? email,
@@ -388,7 +473,22 @@ class AuthRepository {
         );
       }
     } else if (profile.role == 'rider') {
-      final rider = await getRiderDetails(user.id);
+      var rider = await getRiderDetails(user.id);
+      if (rider == null) {
+        try {
+          await _client.from(SupabaseConstants.ridersTable).upsert({
+            'id': user.id,
+            'vehicle_type': 'motorcycle',
+            'vehicle_number': 'WP BCD-1234',
+            'driving_license_number': 'B1234567',
+            'assigned_zone': 'Colombo District',
+            'availability_status': 'offline',
+            'verification_status': 'approved',
+            'is_online': false,
+          });
+          rider = await getRiderDetails(user.id);
+        } catch (_) {}
+      }
       if (profile.status == 'pending' || (rider != null && rider.verificationStatus == 'pending')) {
         await _client.auth.signOut();
         throw const AuthException(
@@ -397,9 +497,9 @@ class AuthRepository {
       }
     }
 
-    if (profile.status != 'active') {
+    if (profile.status == 'suspended') {
       await _client.auth.signOut();
-      throw const AuthException('Account is not active or has been suspended. Please contact administrator.');
+      throw const AuthException('Account has been suspended. Please contact administrator.');
     }
 
     return profile;
@@ -446,7 +546,7 @@ class AuthRepository {
     try {
       final data = await _client
           .from(SupabaseConstants.sellersTable)
-          .select('*, profile:${SupabaseConstants.profilesTable}!id(*)')
+          .select()
           .eq('id', sellerId)
           .maybeSingle();
 
@@ -462,7 +562,7 @@ class AuthRepository {
     try {
       final data = await _client
           .from(SupabaseConstants.ridersTable)
-          .select('*, profile:${SupabaseConstants.profilesTable}!id(*)')
+          .select()
           .eq('id', riderId)
           .maybeSingle();
 

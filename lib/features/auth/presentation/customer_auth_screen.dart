@@ -322,14 +322,23 @@ class _CustomerAuthScreenState extends ConsumerState<CustomerAuthScreen> with Si
               child: ElevatedButton(
                 onPressed: isLoading
                     ? null
-                    : () {
+                    : () async {
                         if (_signUpFormKey.currentState?.validate() ?? false) {
-                          ref.read(authControllerProvider.notifier).signUpCustomer(
-                                fullName: _signUpNameController.text,
-                                email: _signUpEmailController.text,
+                          final success = await ref.read(authControllerProvider.notifier).signUpCustomer(
+                                fullName: _signUpNameController.text.trim(),
+                                email: _signUpEmailController.text.trim(),
                                 password: _signUpPasswordController.text,
-                                phoneNumber: _signUpPhoneController.text,
+                                phoneNumber: _signUpPhoneController.text.trim(),
                               );
+                          if (success && mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Account created successfully! Welcome to BuyLanka 🎉'),
+                                backgroundColor: AppColors.success,
+                                duration: Duration(seconds: 2),
+                              ),
+                            );
+                          }
                         }
                       },
                 style: ElevatedButton.styleFrom(
