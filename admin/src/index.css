@@ -460,6 +460,10 @@ button, input, select, textarea {
   animation: slideUp 200ms ease-out;
 }
 
+.modal-dialog-sm {
+  max-width: 440px;
+}
+
 .modal-dialog-lg {
   max-width: 850px;
 }
