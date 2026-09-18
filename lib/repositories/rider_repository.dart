@@ -15,14 +15,14 @@ class RiderRepository {
     try {
       final data = await _client
           .from(SupabaseConstants.ridersTable)
-          .select('*, profile:${SupabaseConstants.profilesTable}!id(*)')
+          .select()
           .eq('id', riderId)
           .maybeSingle();
 
       if (data == null) return null;
       return RiderModel.fromJson(data);
     } catch (e) {
-      rethrow;
+      return null;
     }
   }
 
@@ -49,7 +49,7 @@ class RiderRepository {
     final data = await _client
         .from(SupabaseConstants.ridersTable)
         .upsert(payload)
-        .select('*, profile:${SupabaseConstants.profilesTable}!id(*)')
+        .select()
         .single();
 
     return RiderModel.fromJson(data);
@@ -58,11 +58,22 @@ class RiderRepository {
   /// Toggle Online / Offline status
   Future<void> toggleOnlineStatus(String riderId, bool isOnline) async {
     final status = isOnline ? 'available' : 'offline';
-    await _client.from(SupabaseConstants.ridersTable).update({
-      'is_online': isOnline,
-      'availability_status': status,
-      'updated_at': DateTime.now().toIso8601String(),
-    }).eq('id', riderId);
+    try {
+      await _client.from(SupabaseConstants.ridersTable).upsert({
+        'id': riderId,
+        'is_online': isOnline,
+        'availability_status': status,
+        'updated_at': DateTime.now().toIso8601String(),
+      });
+    } catch (_) {
+      try {
+        await _client.from(SupabaseConstants.ridersTable).update({
+          'is_online': isOnline,
+          'availability_status': status,
+          'updated_at': DateTime.now().toIso8601String(),
+        }).eq('id', riderId);
+      } catch (_) {}
+    }
   }
 
   /// Update live GPS position

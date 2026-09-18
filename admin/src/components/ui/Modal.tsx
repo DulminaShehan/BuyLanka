@@ -8,7 +8,7 @@ interface ModalProps {
   subtitle?: string
   children: React.ReactNode
   footer?: React.ReactNode
-  size?: 'md' | 'lg'
+  size?: 'sm' | 'md' | 'lg'
 }
 
 export const Modal: React.FC<ModalProps> = ({
@@ -39,7 +39,7 @@ export const Modal: React.FC<ModalProps> = ({
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div
-        className={`modal-dialog ${size === 'lg' ? 'modal-dialog-lg' : ''}`}
+        className={`modal-dialog ${size === 'lg' ? 'modal-dialog-lg' : size === 'sm' ? 'modal-dialog-sm' : ''}`}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="modal-header">

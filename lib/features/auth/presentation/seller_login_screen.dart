@@ -240,7 +240,7 @@ class _SellerLoginScreenState extends ConsumerState<SellerLoginScreen> with Sing
                         title: 'Restaurant Partner',
                         subtitle: 'Manage shop & food menu',
                         icon: Icons.storefront_rounded,
-                        color: const Color(0xFFE65100),
+                        color: AppColors.primary,
                       ),
                     ),
                     const SizedBox(width: 12),

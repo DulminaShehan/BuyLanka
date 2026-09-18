@@ -68,8 +68,26 @@ class AuthController extends StateNotifier<AuthStateData> {
     }
 
     try {
-      final profile = await _authRepository.getProfile(user.id);
-      if (profile != null && profile.isActive) {
+      var profile = await _authRepository.getProfile(user.id);
+      if (profile == null) {
+        profile = ProfileModel(
+          id: user.id,
+          fullName: user.userMetadata?['full_name'] ?? 'Valued Customer',
+          email: user.email ?? 'customer@buylanka.lk',
+          phoneNumber: user.userMetadata?['phone_number'],
+          role: user.userMetadata?['role'] ?? 'customer',
+          status: 'active',
+        );
+        try {
+          await _authRepository.updateProfile(
+            userId: user.id,
+            fullName: profile.fullName,
+            phoneNumber: profile.phoneNumber,
+          );
+        } catch (_) {}
+      }
+
+      if (profile.isActive) {
         if (profile.role == 'customer') {
           state = state.copyWith(profile: profile, isLoading: false);
         } else if (profile.role == 'seller') {
@@ -151,7 +169,7 @@ class AuthController extends StateNotifier<AuthStateData> {
     }
   }
 
-  /// Register Delivery Rider Partner (Pending Super Admin Approval)
+  /// Register Delivery Rider Partner
   Future<bool> signUpRider({
     required String fullName,
     required String email,
@@ -163,7 +181,7 @@ class AuthController extends StateNotifier<AuthStateData> {
   }) async {
     state = state.copyWith(isLoading: true, clearError: true);
     try {
-      await _authRepository.signUpRider(
+      final profile = await _authRepository.signUpRider(
         fullName: fullName,
         email: email,
         password: password,
@@ -172,7 +190,14 @@ class AuthController extends StateNotifier<AuthStateData> {
         drivingLicenseNumber: drivingLicenseNumber,
         phoneNumber: phoneNumber,
       );
-      state = state.copyWith(isLoading: false, clearError: true, clearUser: true);
+      var rider = await _riderRepository.getRiderById(profile.id);
+      rider ??= await _riderRepository.createDefaultRiderRecord(
+        riderId: profile.id,
+        vehicleType: vehicleType,
+        vehicleNumber: vehicleNumber,
+        drivingLicenseNumber: drivingLicenseNumber ?? 'B1234567',
+      );
+      state = state.copyWith(profile: profile, rider: rider, isLoading: false, clearError: true);
       return true;
     } catch (e) {
       state = state.copyWith(
@@ -194,7 +219,16 @@ class AuthController extends StateNotifier<AuthStateData> {
         email: email,
         password: password,
       );
-      state = state.copyWith(profile: profile, isLoading: false, clearError: true);
+      if (profile.role == 'rider') {
+        var rider = await _riderRepository.getRiderById(profile.id);
+        rider ??= await _riderRepository.createDefaultRiderRecord(riderId: profile.id);
+        state = state.copyWith(profile: profile, rider: rider, isLoading: false, clearError: true);
+      } else if (profile.role == 'seller') {
+        final seller = await _authRepository.getSellerDetails(profile.id);
+        state = state.copyWith(profile: profile, seller: seller, isLoading: false, clearError: true);
+      } else {
+        state = state.copyWith(profile: profile, isLoading: false, clearError: true);
+      }
       return true;
     } catch (e) {
       state = state.copyWith(

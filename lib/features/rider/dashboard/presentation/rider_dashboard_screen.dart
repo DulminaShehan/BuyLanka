@@ -78,27 +78,34 @@ class RiderDashboardScreen extends ConsumerWidget {
               ),
               child: const Icon(Icons.delivery_dining_rounded, color: AppColors.primary, size: 24),
             ),
-            const SizedBox(width: 12),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Hello, $riderName 👋',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Hello, $riderName 👋',
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                ),
-                Text(
-                  isOnline ? 'Online • Ready for Deliveries' : 'Offline • Not receiving orders',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: isOnline ? AppColors.success : AppColors.textLight,
+                  Text(
+                    isOnline ? 'Online • Ready for Deliveries' : 'Offline • Not receiving orders',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                      color: isOnline ? AppColors.success : AppColors.textLight,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ],
         ),
@@ -184,79 +191,96 @@ class RiderDashboardScreen extends ConsumerWidget {
     final isOnline = state.isOnline;
     final isToggling = state.isTogglingStatus;
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-      decoration: BoxDecoration(
-        color: isOnline ? AppColors.primary : Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: (isOnline ? AppColors.primary : Colors.black).withValues(alpha: 0.12),
-            blurRadius: 16,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: isOnline ? Colors.white.withValues(alpha: 0.2) : AppColors.surface,
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  isOnline ? Icons.flash_on_rounded : Icons.power_settings_new_rounded,
-                  color: isOnline ? Colors.white : AppColors.textLight,
-                  size: 24,
-                ),
-              ),
-              const SizedBox(width: 14),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+    return GestureDetector(
+      onTap: isToggling
+          ? null
+          : () {
+              ref.read(riderDashboardControllerProvider.notifier).toggleOnlineStatus();
+            },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: isOnline ? AppColors.primary : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: (isOnline ? AppColors.primary : Colors.black).withValues(alpha: 0.12),
+              blurRadius: 16,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: Row(
                 children: [
-                  Text(
-                    isOnline ? 'YOU ARE ONLINE' : 'YOU ARE OFFLINE',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 0.5,
-                      color: isOnline ? Colors.white : AppColors.textPrimary,
+                  Container(
+                    padding: const EdgeInsets.all(9),
+                    decoration: BoxDecoration(
+                      color: isOnline ? Colors.white.withValues(alpha: 0.2) : AppColors.surface,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      isOnline ? Icons.flash_on_rounded : Icons.power_settings_new_rounded,
+                      color: isOnline ? Colors.white : AppColors.textLight,
+                      size: 22,
                     ),
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    isOnline ? 'Receiving delivery dispatches' : 'Turn online to receive deliveries',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: isOnline ? Colors.white.withValues(alpha: 0.85) : AppColors.textLight,
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          isOnline ? 'YOU ARE ONLINE' : 'YOU ARE OFFLINE',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 0.5,
+                            color: isOnline ? Colors.white : AppColors.textPrimary,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          isOnline ? 'Receiving delivery dispatches (Tap to switch)' : 'Turn online to receive deliveries (Tap to switch)',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: isOnline ? Colors.white.withValues(alpha: 0.85) : AppColors.textLight,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
                     ),
                   ),
                 ],
               ),
-            ],
-          ),
-          if (isToggling)
-            const SizedBox(
-              width: 24,
-              height: 24,
-              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-            )
-          else
-            Switch(
-              value: isOnline,
-              activeThumbColor: Colors.white,
-              activeTrackColor: AppColors.secondary,
-              inactiveThumbColor: AppColors.textLight,
-              inactiveTrackColor: AppColors.surface,
-              onChanged: (_) {
-                ref.read(riderDashboardControllerProvider.notifier).toggleOnlineStatus();
-              },
             ),
-        ],
+            const SizedBox(width: 8),
+            if (isToggling)
+              const SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+              )
+            else
+              Switch(
+                value: isOnline,
+                activeThumbColor: Colors.white,
+                activeTrackColor: AppColors.secondary,
+                inactiveThumbColor: AppColors.textLight,
+                inactiveTrackColor: AppColors.surface,
+                onChanged: (_) {
+                  ref.read(riderDashboardControllerProvider.notifier).toggleOnlineStatus();
+                },
+              ),
+          ],
+        ),
       ),
     );
   }

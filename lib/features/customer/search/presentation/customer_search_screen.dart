@@ -181,7 +181,6 @@ class _CustomerSearchScreenState extends ConsumerState<CustomerSearchScreen> {
   Widget _buildShopCard(ShopModel shop) {
     return Material(
       color: Colors.white,
-      borderRadius: BorderRadius.circular(14),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(14),
         side: const BorderSide(color: AppColors.border),
@@ -219,7 +218,6 @@ class _CustomerSearchScreenState extends ConsumerState<CustomerSearchScreen> {
   Widget _buildProductCard(ProductModel product) {
     return Material(
       color: Colors.white,
-      borderRadius: BorderRadius.circular(14),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(14),
         side: const BorderSide(color: AppColors.border),
