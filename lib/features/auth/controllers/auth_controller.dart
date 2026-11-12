@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:buylanka/core/errors/auth_error_handler.dart';
 import 'package:buylanka/models/profile_model.dart';
 import 'package:buylanka/models/rider_model.dart';
 import 'package:buylanka/models/seller_model.dart';
@@ -126,10 +127,10 @@ class AuthController extends StateNotifier<AuthStateData> {
       );
       state = state.copyWith(profile: profile, isLoading: false, clearError: true);
       return true;
-    } catch (e) {
+    } catch (e, stackTrace) {
       state = state.copyWith(
         isLoading: false,
-        errorMessage: e.toString().replaceAll('Exception: ', '').replaceAll('AuthException: ', ''),
+        errorMessage: AuthErrorHandler.handle(e, stackTrace: stackTrace, context: 'Customer Sign Up'),
       );
       return false;
     }
@@ -160,10 +161,10 @@ class AuthController extends StateNotifier<AuthStateData> {
       );
       state = state.copyWith(isLoading: false, clearError: true, clearUser: true);
       return true;
-    } catch (e) {
+    } catch (e, stackTrace) {
       state = state.copyWith(
         isLoading: false,
-        errorMessage: e.toString().replaceAll('Exception: ', '').replaceAll('AuthException: ', ''),
+        errorMessage: AuthErrorHandler.handle(e, stackTrace: stackTrace, context: 'Seller Sign Up'),
       );
       return false;
     }
@@ -199,10 +200,10 @@ class AuthController extends StateNotifier<AuthStateData> {
       );
       state = state.copyWith(profile: profile, rider: rider, isLoading: false, clearError: true);
       return true;
-    } catch (e) {
+    } catch (e, stackTrace) {
       state = state.copyWith(
         isLoading: false,
-        errorMessage: e.toString().replaceAll('Exception: ', '').replaceAll('AuthException: ', ''),
+        errorMessage: AuthErrorHandler.handle(e, stackTrace: stackTrace, context: 'Rider Sign Up'),
       );
       return false;
     }
@@ -230,10 +231,10 @@ class AuthController extends StateNotifier<AuthStateData> {
         state = state.copyWith(profile: profile, isLoading: false, clearError: true);
       }
       return true;
-    } catch (e) {
+    } catch (e, stackTrace) {
       state = state.copyWith(
         isLoading: false,
-        errorMessage: e.toString().replaceAll('Exception: ', '').replaceAll('AuthException: ', ''),
+        errorMessage: AuthErrorHandler.handle(e, stackTrace: stackTrace, context: 'Customer Sign In'),
       );
       return false;
     }
@@ -278,10 +279,40 @@ class AuthController extends StateNotifier<AuthStateData> {
         state = state.copyWith(profile: profile, isLoading: false, clearError: true);
         return true;
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
       state = state.copyWith(
         isLoading: false,
-        errorMessage: e.toString().replaceAll('Exception: ', '').replaceAll('AuthException: ', ''),
+        errorMessage: AuthErrorHandler.handle(e, stackTrace: stackTrace, context: 'Universal Sign In'),
+      );
+      return false;
+    }
+  }
+
+  /// Seller / Restaurant Sign-In with Role Verification
+  Future<bool> signInSeller({
+    required String email,
+    required String password,
+  }) async {
+    state = state.copyWith(isLoading: true, clearError: true);
+
+    try {
+      final profile = await _authRepository.signInSeller(
+        email: email,
+        password: password,
+      );
+      final seller = await _authRepository.getSellerDetails(profile.id);
+
+      state = state.copyWith(
+        profile: profile,
+        seller: seller,
+        isLoading: false,
+        clearError: true,
+      );
+      return true;
+    } catch (e, stackTrace) {
+      state = state.copyWith(
+        isLoading: false,
+        errorMessage: AuthErrorHandler.handle(e, stackTrace: stackTrace, context: 'Seller Sign In'),
       );
       return false;
     }
@@ -310,10 +341,10 @@ class AuthController extends StateNotifier<AuthStateData> {
         clearError: true,
       );
       return true;
-    } catch (e) {
+    } catch (e, stackTrace) {
       state = state.copyWith(
         isLoading: false,
-        errorMessage: e.toString().replaceAll('Exception: ', '').replaceAll('AuthException: ', ''),
+        errorMessage: AuthErrorHandler.handle(e, stackTrace: stackTrace, context: 'Rider Sign In'),
       );
       return false;
     }
@@ -350,6 +381,25 @@ class AuthController extends StateNotifier<AuthStateData> {
     } else if (profile?.role == 'rider') {
       final rider = await _riderRepository.getRiderById(user.id);
       state = state.copyWith(profile: profile, rider: rider);
+    }
+  }
+
+  Future<bool> sendPasswordReset(String email) async {
+    try {
+      await _authRepository.sendPasswordReset(email);
+      return true;
+    } catch (e, stackTrace) {
+      state = state.copyWith(
+        errorMessage: AuthErrorHandler.handle(e, stackTrace: stackTrace, context: 'Password Reset'),
+      );
+      return false;
+    }
+  }
+
+  /// Clears active error message state
+  void clearError() {
+    if (state.errorMessage != null) {
+      state = state.copyWith(clearError: true);
     }
   }
 

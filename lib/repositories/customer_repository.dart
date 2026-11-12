@@ -2,6 +2,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:buylanka/core/constants/supabase_constants.dart';
 import 'package:buylanka/models/category_model.dart';
 import 'package:buylanka/models/product_model.dart';
+import 'package:buylanka/models/promotion_model.dart';
 import 'package:buylanka/models/shop_model.dart';
 import 'package:buylanka/services/supabase_service.dart';
 
@@ -132,6 +133,45 @@ class CustomerRepository {
       return (data as List).map((p) => ProductModel.fromJson(p as Map<String, dynamic>)).toList();
     } catch (e) {
       return [];
+    }
+  }
+
+  /// Fetch active promotional campaigns
+  Future<List<PromotionModel>> getPromotions() async {
+    try {
+      final data = await _client
+          .from('promotions')
+          .select()
+          .eq('is_active', true)
+          .order('display_order', ascending: true);
+
+      return (data as List).map((p) => PromotionModel.fromJson(p as Map<String, dynamic>)).toList();
+    } catch (_) {
+      // Return default promotional banners if promotions table is not yet provisioned
+      return const [
+        PromotionModel(
+          id: 'promo_kottu',
+          title: 'Kottu Nights 🌙',
+          description: 'Get 20% OFF on all Kottu orders.',
+          buttonText: 'Order Now',
+          imageUrl: 'https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&fit=crop&w=600&q=80',
+          discountPercentage: 20,
+        ),
+        PromotionModel(
+          id: 'promo_burgers',
+          title: 'Juicy Burgers 🍔',
+          description: 'Buy 1 Get 1 Free on gourmet beef & crispy chicken.',
+          buttonText: 'Explore Deals',
+          imageUrl: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=600&q=80',
+        ),
+        PromotionModel(
+          id: 'promo_rice',
+          title: 'Rice & Curry Feast 🇱🇰',
+          description: 'Authentic village clay pot rice with free delivery.',
+          buttonText: 'Order Now',
+          imageUrl: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=600&q=80',
+        ),
+      ];
     }
   }
 }

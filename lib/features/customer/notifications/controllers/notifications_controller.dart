@@ -41,17 +41,21 @@ class NotificationsController extends StateNotifier<NotificationsState> {
 
   Future<void> loadNotifications() async {
     if (_userId == null) return;
+    if (!mounted) return;
     state = state.copyWith(isLoading: true);
     try {
       final list = await _repository.getNotifications(_userId);
+      if (!mounted) return;
       state = state.copyWith(notifications: list, isLoading: false);
     } catch (_) {
+      if (!mounted) return;
       state = state.copyWith(isLoading: false);
     }
   }
 
   Future<void> markAsRead(String notificationId) async {
     await _repository.markAsRead(notificationId);
+    if (!mounted) return;
     final updated = state.notifications.map((n) {
       if (n.id == notificationId) {
         return n.copyWith(isRead: true);
@@ -64,6 +68,7 @@ class NotificationsController extends StateNotifier<NotificationsState> {
   Future<void> markAllAsRead() async {
     if (_userId == null) return;
     await _repository.markAllAsRead(_userId);
+    if (!mounted) return;
     final updated = state.notifications.map((n) => n.copyWith(isRead: true)).toList();
     state = state.copyWith(notifications: updated);
   }

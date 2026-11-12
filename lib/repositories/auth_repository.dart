@@ -26,26 +26,24 @@ class AuthRepository {
     final cleanFullName = fullName.trim();
     final cleanPhone = phoneNumber?.trim();
 
-    AuthResponse response;
-    try {
-      response = await _client.auth.signUp(
-        email: cleanEmail,
-        password: password,
-        data: {
-          'full_name': cleanFullName,
-          'phone_number': cleanPhone,
-          'role': 'customer',
-        },
-      );
-    } on AuthException catch (e) {
-      if (e.message.toLowerCase().contains('already registered') ||
-          e.message.toLowerCase().contains('user already exists')) {
-        return await signInCustomer(email: cleanEmail, password: password);
-      }
-      rethrow;
-    }
+    final response = await _client.auth.signUp(
+      email: cleanEmail,
+      password: password,
+      data: {
+        'full_name': cleanFullName,
+        'phone_number': cleanPhone,
+        'role': 'customer',
+      },
+    );
 
     var user = response.user;
+    if (user != null && user.identities != null && user.identities!.isEmpty) {
+      throw const AuthException(
+        'User already registered',
+        statusCode: '422',
+        code: 'user_already_exists',
+      );
+    }
     if (user == null) {
       try {
         final signRes = await _client.auth.signInWithPassword(
@@ -124,6 +122,13 @@ class AuthRepository {
     );
 
     final user = response.user;
+    if (user != null && user.identities != null && user.identities!.isEmpty) {
+      throw const AuthException(
+        'User already registered',
+        statusCode: '422',
+        code: 'user_already_exists',
+      );
+    }
     if (user == null) {
       throw const AuthException('Seller registration failed');
     }
@@ -222,6 +227,13 @@ class AuthRepository {
     );
 
     final user = response.user;
+    if (user != null && user.identities != null && user.identities!.isEmpty) {
+      throw const AuthException(
+        'User already registered',
+        statusCode: '422',
+        code: 'user_already_exists',
+      );
+    }
     if (user == null) {
       throw const AuthException('Rider registration failed');
     }
@@ -571,6 +583,11 @@ class AuthRepository {
     } catch (e) {
       return null;
     }
+  }
+
+  /// Send password reset email
+  Future<void> sendPasswordReset(String email) async {
+    await _client.auth.resetPasswordForEmail(email.trim().toLowerCase());
   }
 
   /// Sign out

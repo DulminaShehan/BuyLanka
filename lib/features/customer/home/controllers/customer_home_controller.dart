@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:buylanka/models/category_model.dart';
 import 'package:buylanka/models/product_model.dart';
+import 'package:buylanka/models/promotion_model.dart';
 import 'package:buylanka/models/shop_model.dart';
 import 'package:buylanka/repositories/customer_repository.dart';
 
@@ -13,6 +14,7 @@ class CustomerHomeState {
   final List<ShopModel> nearbyShops;
   final List<ShopModel> popularShops;
   final List<ProductModel> featuredProducts;
+  final List<PromotionModel> promotions;
   final CategoryModel? selectedCategory;
   final bool isLoading;
   final String? errorMessage;
@@ -23,6 +25,7 @@ class CustomerHomeState {
     this.nearbyShops = const [],
     this.popularShops = const [],
     this.featuredProducts = const [],
+    this.promotions = const [],
     this.selectedCategory,
     this.isLoading = false,
     this.errorMessage,
@@ -34,6 +37,7 @@ class CustomerHomeState {
     List<ShopModel>? nearbyShops,
     List<ShopModel>? popularShops,
     List<ProductModel>? featuredProducts,
+    List<PromotionModel>? promotions,
     CategoryModel? selectedCategory,
     bool clearSelectedCategory = false,
     bool? isLoading,
@@ -45,6 +49,7 @@ class CustomerHomeState {
       nearbyShops: nearbyShops ?? this.nearbyShops,
       popularShops: popularShops ?? this.popularShops,
       featuredProducts: featuredProducts ?? this.featuredProducts,
+      promotions: promotions ?? this.promotions,
       selectedCategory: clearSelectedCategory ? null : (selectedCategory ?? this.selectedCategory),
       isLoading: isLoading ?? this.isLoading,
       errorMessage: errorMessage,
@@ -61,21 +66,26 @@ class CustomerHomeController extends StateNotifier<CustomerHomeState> {
   }
 
   Future<void> loadHomeData() async {
+    if (!mounted) return;
     state = state.copyWith(isLoading: true, errorMessage: null);
     try {
       final categories = await _repository.getCategories();
       final nearbyShops = await _repository.getShops();
       final popularShops = await _repository.getPopularShops();
       final featuredProducts = await _repository.getFeaturedProducts();
+      final promotions = await _repository.getPromotions();
 
+      if (!mounted) return;
       state = state.copyWith(
         categories: categories,
         nearbyShops: nearbyShops,
         popularShops: popularShops,
         featuredProducts: featuredProducts,
+        promotions: promotions,
         isLoading: false,
       );
     } catch (e) {
+      if (!mounted) return;
       state = state.copyWith(
         isLoading: false,
         errorMessage: 'Unable to load home feed. Please swipe down to refresh.',
@@ -84,6 +94,7 @@ class CustomerHomeController extends StateNotifier<CustomerHomeState> {
   }
 
   void selectCategory(CategoryModel? category) {
+    if (!mounted) return;
     if (state.selectedCategory?.id == category?.id) {
       state = state.copyWith(clearSelectedCategory: true);
     } else {
@@ -92,6 +103,7 @@ class CustomerHomeController extends StateNotifier<CustomerHomeState> {
   }
 
   void updateDeliveryLocation(String address) {
+    if (!mounted) return;
     state = state.copyWith(currentDeliveryAddress: address);
   }
 }

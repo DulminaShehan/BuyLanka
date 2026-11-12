@@ -53,11 +53,14 @@ class CustomerOrdersController extends StateNotifier<CustomerOrdersState> {
 
   Future<void> loadOrders() async {
     if (_customerId == null) return;
+    if (!mounted) return;
     state = state.copyWith(isLoading: true, errorMessage: null);
     try {
       final orders = await _repository.getCustomerOrders(_customerId);
+      if (!mounted) return;
       state = state.copyWith(orders: orders, isLoading: false);
     } catch (e) {
+      if (!mounted) return;
       state = state.copyWith(
         isLoading: false,
         errorMessage: 'Unable to load orders. Please swipe down to retry.',

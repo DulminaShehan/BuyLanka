@@ -47,6 +47,7 @@ class AddressController extends StateNotifier<AddressState> {
 
   Future<void> loadAddresses() async {
     if (_customerId == null) return;
+    if (!mounted) return;
     state = state.copyWith(isLoading: true);
     try {
       final list = await _repository.getCustomerAddresses(_customerId);
@@ -54,17 +55,20 @@ class AddressController extends StateNotifier<AddressState> {
       if (list.isNotEmpty) {
         selected = list.firstWhere((a) => a.isDefault, orElse: () => list.first);
       }
+      if (!mounted) return;
       state = state.copyWith(
         addresses: list,
         selectedAddress: selected,
         isLoading: false,
       );
     } catch (_) {
+      if (!mounted) return;
       state = state.copyWith(isLoading: false);
     }
   }
 
   void selectAddress(AddressModel address) {
+    if (!mounted) return;
     state = state.copyWith(selectedAddress: address);
   }
 
@@ -79,6 +83,7 @@ class AddressController extends StateNotifier<AddressState> {
     bool isDefault = false,
   }) async {
     if (_customerId == null) return false;
+    if (!mounted) return false;
 
     state = state.copyWith(isLoading: true);
     final created = await _repository.createAddress(AddressModel(
@@ -95,22 +100,27 @@ class AddressController extends StateNotifier<AddressState> {
     ));
 
     if (created != null) {
+      if (!mounted) return false;
       await loadAddresses();
+      if (!mounted) return false;
       selectAddress(created);
       return true;
     }
+    if (!mounted) return false;
     state = state.copyWith(isLoading: false);
     return false;
   }
 
   Future<void> deleteAddress(String addressId) async {
     await _repository.deleteAddress(addressId);
+    if (!mounted) return;
     await loadAddresses();
   }
 
   Future<void> setDefaultAddress(String addressId) async {
     if (_customerId == null) return;
     await _repository.setDefaultAddress(_customerId, addressId);
+    if (!mounted) return;
     await loadAddresses();
   }
 }

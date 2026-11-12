@@ -13,20 +13,29 @@ class AppColors {
   static const Color secondaryLight = Color(0xFFE8F5E9);
   static const Color accent = Color(0xFF1565C0);
 
-  // Status & Alerts
-  static const Color success = Color(0xFF2E7D32);
-  static const Color successBg = Color(0xFFE8F5E9);
+  // Status & Alerts (Updated with friendly feedback theme)
+  static const Color success = Color(0xFF16A34A);
+  static const Color successBg = Color(0xFFF0FDF4);
+  static const Color successBorder = Color(0xFFBBF7D0);
+  static const Color successText = Color(0xFF166534);
+
   static const Color warning = Color(0xFFF57C00);
   static const Color warningBg = Color(0xFFFFF3E0);
-  static const Color danger = Color(0xFFD32F2F);
-  static const Color dangerBg = Color(0xFFFFEBEE);
-  static const Color error = Color(0xFFD32F2F);
-  static const Color errorBg = Color(0xFFFFEBEE);
-  static const Color info = Color(0xFF1565C0);
-  static const Color infoBg = Color(0xFFE3F2FD);
+  static const Color danger = Color(0xFFDC2626);
+  static const Color dangerBg = Color(0xFFFFF1F2);
+  
+  static const Color error = Color(0xFFDC2626); // Red icon: #DC2626
+  static const Color errorBg = Color(0xFFFFF1F2); // Soft red background: #FFF1F2
+  static const Color errorBorder = Color(0xFFFECDD3); // Red border: #FECDD3
+  static const Color errorText = Color(0xFF991B1B); // Dark readable text
+  
+  static const Color info = Color(0xFF1565C0); // Blue icon: #1565C0
+  static const Color infoBg = Color(0xFFE3F2FD); // Light blue background: #E3F2FD
+  static const Color infoBorder = Color(0xFFBFDBFE); // Light blue border
+  static const Color infoText = Color(0xFF0D47A1); // Dark readable blue text
 
   // Neutral tones
-  static const Color background = Color(0xFFF8FAFC);
+  static const Color background = Color(0xFFF5F9FF);
   static const Color surface = Color(0xFFFFFFFF);
   static const Color surfaceVariant = Color(0xFFF1F5F9);
   static const Color border = Color(0xFFD9E2EC);

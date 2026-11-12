@@ -42,22 +42,26 @@ class CustomerSearchController extends StateNotifier<CustomerSearchState> {
   Future<void> search(String query) async {
     final trimmed = query.trim();
     if (trimmed.isEmpty) {
+      if (!mounted) return;
       state = const CustomerSearchState();
       return;
     }
 
+    if (!mounted) return;
     state = state.copyWith(query: trimmed, isSearching: true);
 
     try {
       final products = await _repository.searchProducts(trimmed);
       final shops = await _repository.getShops(search: trimmed);
 
+      if (!mounted) return;
       state = state.copyWith(
         matchingProducts: products,
         matchingShops: shops,
         isSearching: false,
       );
     } catch (_) {
+      if (!mounted) return;
       state = state.copyWith(isSearching: false);
     }
   }

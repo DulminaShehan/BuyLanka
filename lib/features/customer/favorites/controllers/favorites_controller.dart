@@ -41,16 +41,19 @@ class FavoritesController extends StateNotifier<FavoritesState> {
 
   Future<void> loadFavorites() async {
     if (_customerId == null) return;
+    if (!mounted) return;
     state = state.copyWith(isLoading: true);
     try {
       final shops = await _repository.getFavoriteShops(_customerId);
       final products = await _repository.getFavoriteProducts(_customerId);
+      if (!mounted) return;
       state = state.copyWith(
         favoriteShops: shops,
         favoriteProducts: products,
         isLoading: false,
       );
     } catch (_) {
+      if (!mounted) return;
       state = state.copyWith(isLoading: false);
     }
   }
@@ -58,12 +61,14 @@ class FavoritesController extends StateNotifier<FavoritesState> {
   Future<void> toggleShopFavorite(String shopId) async {
     if (_customerId == null) return;
     await _repository.toggleFavoriteShop(_customerId, shopId);
+    if (!mounted) return;
     await loadFavorites();
   }
 
   Future<void> toggleProductFavorite(String productId) async {
     if (_customerId == null) return;
     await _repository.toggleFavoriteProduct(_customerId, productId);
+    if (!mounted) return;
     await loadFavorites();
   }
 }
