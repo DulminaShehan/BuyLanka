@@ -286,26 +286,21 @@ class _CustomerHomeScreenState extends ConsumerState<CustomerHomeScreen> {
                     width: 38,
                     height: 38,
                     decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFF1565C0), Color(0xFF0D47A1)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
+                      color: Colors.white,
                       borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: AppColors.border, width: 1.2),
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.primary.withValues(alpha: 0.25),
+                          color: AppColors.primary.withValues(alpha: 0.1),
                           blurRadius: 8,
-                          offset: const Offset(0, 3),
+                          offset: const Offset(0, 2),
                         ),
                       ],
                     ),
-                    child: const Center(
-                      child: Icon(
-                        Icons.delivery_dining_rounded,
-                        color: Colors.white,
-                        size: 24,
-                      ),
+                    padding: const EdgeInsets.all(4),
+                    child: Image.asset(
+                      'assets/images/buylanka_icon_foreground.png',
+                      fit: BoxFit.contain,
                     ),
                   ),
                   const SizedBox(width: 10),

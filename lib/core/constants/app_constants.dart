@@ -1,6 +1,6 @@
 class AppConstants {
-  static const String appName = 'BuyLanka Partner';
-  static const String appTagline = 'Seller & Restaurant Management';
+  static const String appName = 'BuyLanka';
+  static const String appTagline = 'Food & Local Delivery Platform 🇱🇰';
   static const String currencySymbol = 'Rs.';
   static const String currencyCode = 'LKR';
 

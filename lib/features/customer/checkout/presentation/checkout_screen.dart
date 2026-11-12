@@ -233,9 +233,12 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
             ],
           ),
           const Divider(height: 16),
+          // ignore: deprecated_member_use
           RadioListTile<String>(
             value: 'cod',
+            // ignore: deprecated_member_use
             groupValue: _selectedPaymentMethod,
+            // ignore: deprecated_member_use
             onChanged: (val) => setState(() => _selectedPaymentMethod = val!),
             activeColor: AppColors.primary,
             contentPadding: EdgeInsets.zero,
@@ -244,9 +247,12 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
             secondary: const Icon(Icons.money_rounded, color: AppColors.success),
           ),
           const Divider(height: 10),
+          // ignore: deprecated_member_use
           RadioListTile<String>(
             value: 'card',
+            // ignore: deprecated_member_use
             groupValue: _selectedPaymentMethod,
+            // ignore: deprecated_member_use
             onChanged: null, // Online card gateway placeholder
             activeColor: AppColors.primary,
             contentPadding: EdgeInsets.zero,

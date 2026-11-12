@@ -77,10 +77,10 @@ class ShopDetailsController extends StateNotifier<ShopDetailsState> {
     required FavoriteRepository favoriteRepo,
     required ReviewRepository reviewRepo,
     String? customerId,
-  })  : _customerRepo = customerRepo,
-        _favoriteRepo = favoriteRepo,
-        _reviewRepo = reviewRepo,
-        _customerId = customerId,
+  })  : _customerRepo = customerRepo, // ignore: prefer_initializing_formals
+        _favoriteRepo = favoriteRepo, // ignore: prefer_initializing_formals
+        _reviewRepo = reviewRepo, // ignore: prefer_initializing_formals
+        _customerId = customerId, // ignore: prefer_initializing_formals
         super(const ShopDetailsState(isLoading: true)) {
     loadShopDetails();
   }

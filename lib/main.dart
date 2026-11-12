@@ -6,8 +6,10 @@ import 'package:buylanka/core/theme/app_theme.dart';
 import 'package:buylanka/features/auth/controllers/auth_controller.dart';
 import 'package:buylanka/features/auth/presentation/customer_auth_screen.dart';
 import 'package:buylanka/features/customer/presentation/customer_main_nav_screen.dart';
+import 'package:buylanka/features/rider/presentation/rider_application_status_screen.dart';
 import 'package:buylanka/features/rider/presentation/rider_main_nav_screen.dart';
 import 'package:buylanka/features/seller/presentation/seller_main_nav_screen.dart';
+import 'package:buylanka/features/splash/presentation/splash_screen.dart';
 import 'package:buylanka/services/supabase_service.dart';
 
 void main() async {
@@ -46,16 +48,14 @@ class BuyLankaApp extends ConsumerWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       home: authState.isLoading
-          ? const Scaffold(
-              body: Center(
-                child: CircularProgressIndicator(),
-              ),
-            )
+          ? const SplashScreen()
           : authState.isAuthenticated
               ? (authState.isCustomer
                   ? const CustomerMainNavScreen()
                   : (authState.isRider
-                      ? const RiderMainNavScreen()
+                      ? (authState.rider?.isApproved == true
+                          ? const RiderMainNavScreen()
+                          : const RiderApplicationStatusScreen())
                       : const SellerMainNavScreen()))
               : const CustomerAuthScreen(),
     );

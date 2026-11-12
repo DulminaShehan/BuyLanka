@@ -6,6 +6,7 @@ import 'package:buylanka/core/constants/app_colors.dart';
 import 'package:buylanka/core/location/location_service.dart';
 import 'package:buylanka/core/widgets/auth_feedback_banner.dart';
 import 'package:buylanka/features/auth/controllers/auth_controller.dart';
+import 'package:buylanka/features/rider/registration/presentation/rider_registration_screen.dart';
 
 enum PartnerRole { restaurant, rider }
 
@@ -554,17 +555,14 @@ class _SellerLoginScreenState extends ConsumerState<SellerLoginScreen> {
                     width: 24,
                     height: 24,
                     decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [AppColors.primary, AppColors.primaryDark],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(7),
-                    ),
-                    child: const Icon(
-                      Icons.delivery_dining_rounded,
                       color: Colors.white,
-                      size: 15,
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: AppColors.border, width: 0.8),
+                    ),
+                    padding: const EdgeInsets.all(2),
+                    child: Image.asset(
+                      'assets/images/buylanka_icon_foreground.png',
+                      fit: BoxFit.contain,
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -773,7 +771,7 @@ class _SellerLoginScreenState extends ConsumerState<SellerLoginScreen> {
 
   // --- 3. Segmented Control Tabs ---
   Widget _buildSegmentedTabs() {
-    final registerLabel = _selectedRole == PartnerRole.restaurant ? 'Register Restaurant' : 'Rider Onboarding';
+    final registerLabel = _selectedRole == PartnerRole.restaurant ? 'Register Restaurant' : 'Register as Rider';
 
     return Container(
       height: 50,
@@ -840,12 +838,20 @@ class _SellerLoginScreenState extends ConsumerState<SellerLoginScreen> {
             ),
           ),
 
-          // Register / Onboarding Tab
+          // Register Tab
           Expanded(
             child: GestureDetector(
               onTap: () {
-                if (_selectedTabIndex != 1) {
-                  setState(() => _selectedTabIndex = 1);
+                if (_selectedRole == PartnerRole.rider) {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const RiderRegistrationScreen(),
+                    ),
+                  );
+                } else {
+                  if (_selectedTabIndex != 1) {
+                    setState(() => _selectedTabIndex = 1);
+                  }
                 }
               },
               child: AnimatedContainer(
@@ -875,9 +881,7 @@ class _SellerLoginScreenState extends ConsumerState<SellerLoginScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Icon(
-                        _selectedRole == PartnerRole.restaurant
-                            ? Icons.app_registration_rounded
-                            : Icons.badge_outlined,
+                        Icons.app_registration_rounded,
                         size: 17,
                         color: _selectedTabIndex == 1 ? Colors.white : AppColors.primaryDark,
                       ),
@@ -922,8 +926,8 @@ class _SellerLoginScreenState extends ConsumerState<SellerLoginScreen> {
         message = 'Register your restaurant. Applications are verified by BuyLanka operations.';
         icon = Icons.verified_user_outlined;
       } else {
-        message = 'Rider accounts are verified and provisioned directly by BuyLanka Administration.';
-        icon = Icons.admin_panel_settings_outlined;
+        message = 'Register as a delivery rider. Submit your vehicle and identity documents for quick approval.';
+        icon = Icons.two_wheeler_rounded;
       }
     }
 
@@ -1438,7 +1442,7 @@ class _SellerLoginScreenState extends ConsumerState<SellerLoginScreen> {
     );
   }
 
-  // --- 8. Rider Onboarding Policy Card (Requirement 8) ---
+  // --- 8. Rider Registration Entry Card ---
   Widget _buildRiderOnboardingView() {
     return Container(
       padding: const EdgeInsets.all(22),
@@ -1468,7 +1472,7 @@ class _SellerLoginScreenState extends ConsumerState<SellerLoginScreen> {
                 border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
               ),
               child: const Icon(
-                Icons.admin_panel_settings_rounded,
+                Icons.two_wheeler_rounded,
                 color: AppColors.primary,
                 size: 30,
               ),
@@ -1478,10 +1482,10 @@ class _SellerLoginScreenState extends ConsumerState<SellerLoginScreen> {
 
           // Title
           Text(
-            'Rider Accounts Created by Admin',
+            'Register as Delivery Rider',
             textAlign: TextAlign.center,
             style: GoogleFonts.plusJakartaSans(
-              fontSize: 17,
+              fontSize: 18,
               fontWeight: FontWeight.w800,
               color: AppColors.textPrimary,
             ),
@@ -1490,7 +1494,7 @@ class _SellerLoginScreenState extends ConsumerState<SellerLoginScreen> {
 
           // Description
           Text(
-            'To ensure premium safety, reliability, and Sri Lankan regulatory compliance, all BuyLanka delivery riders are onboarded through official Super Administration review.',
+            'Join the BuyLanka delivery fleet. Earn competitive rates delivering delicious food to customers across Sri Lanka with flexible hours.',
             textAlign: TextAlign.center,
             style: GoogleFonts.plusJakartaSans(
               fontSize: 13,
@@ -1513,7 +1517,7 @@ class _SellerLoginScreenState extends ConsumerState<SellerLoginScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'How to Join BuyLanka Delivery Fleet:',
+                  '4-Step Easy Self-Registration:',
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 13.5,
                     fontWeight: FontWeight.w800,
@@ -1523,90 +1527,60 @@ class _SellerLoginScreenState extends ConsumerState<SellerLoginScreen> {
                 const SizedBox(height: 12),
                 _buildRiderStepItem(
                   stepNumber: '1',
-                  title: 'Document Submission',
-                  description: 'Valid Driving License, Revenue License, and National Identity Card (NIC).',
+                  title: 'Personal Details',
+                  description: 'Legal name, contact phone, email, and NIC number.',
                 ),
                 const SizedBox(height: 10),
                 _buildRiderStepItem(
                   stepNumber: '2',
-                  title: 'Vehicle & Background Verification',
-                  description: 'Physical inspection of motorcycle / vehicle and safety briefing.',
+                  title: 'Vehicle Details',
+                  description: 'Motorcycle, Scooter, Bicycle, or Three-Wheeler registration.',
                 ),
                 const SizedBox(height: 10),
                 _buildRiderStepItem(
                   stepNumber: '3',
-                  title: 'Account Provisioning',
-                  description: 'Receive your official rider login credentials and thermal delivery bag.',
+                  title: 'Document Upload',
+                  description: 'Clear photos of your NIC, Driving Licence & Vehicle Documents.',
                 ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 18),
-
-          // Contact Box
-          Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: AppColors.primaryLight,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
-            ),
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    const Icon(Icons.headset_mic_rounded, color: AppColors.primary, size: 20),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Fleet Operations Desk',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 13.5,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.primaryDark,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    const Icon(Icons.email_outlined, color: AppColors.primary, size: 16),
-                    const SizedBox(width: 8),
-                    Text(
-                      'riders@buylanka.lk',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    const Icon(Icons.phone_outlined, color: AppColors.primary, size: 16),
-                    const SizedBox(width: 8),
-                    Text(
-                      '011 234 5678 / 077 123 4567',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                  ],
+                const SizedBox(height: 10),
+                _buildRiderStepItem(
+                  stepNumber: '4',
+                  title: 'Review & Submit',
+                  description: 'Our operations team will review and approve your account.',
                 ),
               ],
             ),
           ),
           const SizedBox(height: 20),
 
-          // Return to Sign In Button
+          // Open Registration Form Button
           _buildPrimaryButton(
-            label: 'Back to Rider Sign In →',
+            label: 'Register as Rider →',
             isLoading: false,
-            onPressed: () => setState(() => _selectedTabIndex = 0),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => const RiderRegistrationScreen(),
+                ),
+              );
+            },
+          ),
+
+          const SizedBox(height: 12),
+
+          // Return to Sign In
+          Center(
+            child: TextButton(
+              onPressed: () => setState(() => _selectedTabIndex = 0),
+              child: Text(
+                'Already have an account? Sign In',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.primary,
+                ),
+              ),
+            ),
           ),
         ],
       ),

@@ -10,6 +10,7 @@ class SupabaseService {
 
     await Supabase.initialize(
       url: url,
+      // ignore: deprecated_member_use
       anonKey: anonKey,
       debug: false,
     );

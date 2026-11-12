@@ -155,7 +155,7 @@ class CartScreen extends ConsumerWidget {
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     itemCount: cart.items.length,
-                    separatorBuilder: (_, __) => const Divider(height: 20),
+                    separatorBuilder: (_, _) => const Divider(height: 20),
                     itemBuilder: (context, index) {
                       final item = cart.items[index];
                       return Row(

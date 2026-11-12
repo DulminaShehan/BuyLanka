@@ -74,7 +74,7 @@ class LiveTrackingController extends StateNotifier<LiveTrackingState> {
   LiveTrackingController({
     required this.orderId,
     required CustomerOrderRepository orderRepo,
-  })  : _orderRepo = orderRepo,
+  })  : _orderRepo = orderRepo, // ignore: prefer_initializing_formals
         super(const LiveTrackingState(
           shopLocation: LatLng(6.9271, 79.8612), // Colombo Default
           customerLocation: LatLng(6.8905, 79.8732),

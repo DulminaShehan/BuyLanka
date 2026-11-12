@@ -25,6 +25,7 @@ class ProfileModel {
   bool get isRider => role == 'rider';
   bool get isCustomer => role == 'customer';
   bool get isActive => status == 'active';
+  bool get isPending => status == 'pending';
 
   factory ProfileModel.fromJson(Map<String, dynamic> json) {
     return ProfileModel(

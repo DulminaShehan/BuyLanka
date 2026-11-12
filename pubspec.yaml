@@ -60,6 +60,25 @@ dev_dependencies:
     sdk: flutter
 
   flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.4
+  flutter_native_splash: ^2.4.8
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/images/buylanka_icon.png"
+  min_sdk_android: 21
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: "assets/images/buylanka_icon_foreground.png"
+
+flutter_native_splash:
+  color: "#F5F9FF"
+  image: "assets/images/buylanka_logo.png"
+  android_12:
+    image: "assets/images/buylanka_icon_foreground.png"
+    color: "#F5F9FF"
+  android: true
+  ios: true
 
 flutter:
   uses-material-design: true

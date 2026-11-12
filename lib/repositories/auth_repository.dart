@@ -1,3 +1,4 @@
+// ignore_for_file: use_null_aware_elements
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:buylanka/core/constants/supabase_constants.dart';
 import 'package:buylanka/models/profile_model.dart';

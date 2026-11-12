@@ -59,21 +59,18 @@ void main() {
     expect(find.text('Sign in to manage deliveries and track your earnings.'), findsOneWidget);
     expect(find.text('Rider Email'), findsOneWidget);
     expect(find.text('Sign In as Rider →'), findsOneWidget);
-    expect(find.text('Rider Onboarding'), findsOneWidget);
+    expect(find.text('Register as Rider'), findsOneWidget);
 
-    // 5. Test Switching to "Rider Onboarding" Tab
-    await tester.tap(find.text('Rider Onboarding'));
+    // 5. Test Switching to "Register as Rider" Tab opens Rider Registration Screen
+    await tester.tap(find.text('Register as Rider'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Rider Accounts Created by Admin'), findsOneWidget);
-    expect(find.text('How to Join BuyLanka Delivery Fleet:'), findsOneWidget);
-    expect(find.text('Document Submission'), findsOneWidget);
-    expect(find.text('Fleet Operations Desk'), findsOneWidget);
-    expect(find.text('Back to Rider Sign In →'), findsOneWidget);
+    expect(find.text('Rider Registration'), findsOneWidget);
+    expect(find.text('Personal Information'), findsOneWidget);
+    expect(find.text('Full Name (as per NIC)'), findsOneWidget);
 
-    // 6. Test "Back to Rider Sign In" Button
-    await tester.ensureVisible(find.text('Back to Rider Sign In →'));
-    await tester.tap(find.text('Back to Rider Sign In →'));
+    // 6. Test Back navigation returns to Partner Portal
+    await tester.tap(find.byIcon(Icons.arrow_back_rounded).last);
     await tester.pumpAndSettle();
     expect(find.text('Sign In as Rider →'), findsOneWidget);
 
@@ -102,6 +99,8 @@ void main() {
     await tester.tap(find.text('Sign In'));
     await tester.pumpAndSettle();
 
+    await tester.ensureVisible(find.text('Forgot Password?'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Forgot Password?'));
     await tester.pumpAndSettle();
 

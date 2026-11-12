@@ -29,10 +29,11 @@ class AuthStateData {
     this.errorMessage,
   });
 
-  bool get isAuthenticated => profile != null && profile!.isActive;
+  bool get isAuthenticated =>
+      profile != null && (profile!.isActive || (profile!.isPending && profile!.role == 'rider'));
   bool get isCustomer => profile != null && profile!.role == 'customer' && profile!.isActive;
   bool get isSeller => profile != null && profile!.role == 'seller' && profile!.isActive;
-  bool get isRider => profile != null && profile!.role == 'rider' && profile!.isActive;
+  bool get isRider => profile != null && profile!.role == 'rider';
 
   AuthStateData copyWith({
     ProfileModel? profile,
@@ -88,7 +89,7 @@ class AuthController extends StateNotifier<AuthStateData> {
         } catch (_) {}
       }
 
-      if (profile.isActive) {
+      if (profile.isActive || (profile.status == 'pending' && profile.role == 'rider')) {
         if (profile.role == 'customer') {
           state = state.copyWith(profile: profile, isLoading: false);
         } else if (profile.role == 'seller') {
@@ -394,6 +395,19 @@ class AuthController extends StateNotifier<AuthStateData> {
       );
       return false;
     }
+  }
+
+  /// Sets rider profile and state directly (e.g. after registration)
+  void setRiderState({
+    required ProfileModel profile,
+    required RiderModel rider,
+  }) {
+    state = state.copyWith(
+      profile: profile,
+      rider: rider,
+      isLoading: false,
+      clearError: true,
+    );
   }
 
   /// Clears active error message state
