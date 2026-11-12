@@ -6,19 +6,32 @@ export const ridersService = {
     try {
       let query = supabase.from('riders').select(`
         *,
-        profile:profiles!id(*)
+        profile:profiles!id(*),
+        pending_change_requests:rider_profile_change_requests(*)
       `)
 
       if (statusFilter && statusFilter !== 'all') {
-        query = query.eq('verification_status', statusFilter as RiderVerificationStatus)
+        if (statusFilter === 'pending_update') {
+          query = query.eq('profile_update_status', 'pending_review')
+        } else {
+          query = query.eq('verification_status', statusFilter as RiderVerificationStatus)
+        }
       }
 
       if (search) {
-        query = query.or(`vehicle_number.ilike.%${search}%,assigned_zone.ilike.%${search}%`)
+        query = query.or(`vehicle_number.ilike.%${search}%,assigned_zone.ilike.%${search}%,vehicle_model.ilike.%${search}%`)
       }
 
-      const { data, error } = await query.order('created_at', { ascending: false })
-      if (error) throw error
+      const { data, error } = await query.order('updated_at', { ascending: false })
+      if (error) {
+        // Fallback without change_requests in case migration is still pending on remote db
+        const fallbackQuery = await supabase.from('riders').select(`
+          *,
+          profile:profiles!id(*)
+        `).order('created_at', { ascending: false })
+        if (fallbackQuery.error) throw fallbackQuery.error
+        return (fallbackQuery.data as any) || []
+      }
       return (data as any) || []
     } catch (err) {
       console.error('Error fetching riders:', err)
@@ -141,6 +154,100 @@ export const ridersService = {
       await supabase.from('profiles').delete().eq('id', id)
     } catch (profileErr) {
       console.warn('Notice when cleaning profile for deleted rider:', profileErr)
+    }
+  },
+
+  /// Approve sensitive rider profile change request
+  async approveChangeRequest(requestId: string, riderId: string, requestedChanges: Record<string, any>, adminId?: string): Promise<void> {
+    try {
+      const { error: rpcError } = await supabase.rpc('approve_rider_profile_change_request', {
+        p_request_id: requestId,
+        p_admin_id: adminId || null,
+      })
+
+      if (rpcError) {
+        // Fallback to direct table updates if RPC is not installed
+        await supabase
+          .from('rider_profile_change_requests')
+          .update({
+            status: 'approved',
+            reviewed_by: adminId || null,
+            reviewed_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', requestId)
+
+        const riderUpdates: Record<string, any> = {
+          profile_update_status: 'approved',
+          updated_at: new Date().toISOString(),
+        }
+        if (requestedChanges.vehicle_number) riderUpdates.vehicle_number = requestedChanges.vehicle_number
+        if (requestedChanges.driving_license_number) riderUpdates.driving_license_number = requestedChanges.driving_license_number
+        if (requestedChanges.vehicle_type) riderUpdates.vehicle_type = requestedChanges.vehicle_type
+        if (requestedChanges.vehicle_model) riderUpdates.vehicle_model = requestedChanges.vehicle_model
+        if (requestedChanges.vehicle_color) riderUpdates.vehicle_color = requestedChanges.vehicle_color
+
+        await supabase.from('riders').update(riderUpdates).eq('id', riderId)
+      }
+    } catch (err) {
+      console.error('Error approving change request:', err)
+      throw err
+    }
+  },
+
+  /// Reject sensitive rider profile change request with admin remarks
+  async rejectChangeRequest(requestId: string, riderId: string, remarks: string, adminId?: string): Promise<void> {
+    try {
+      const { error: rpcError } = await supabase.rpc('reject_rider_profile_change_request', {
+        p_request_id: requestId,
+        p_admin_id: adminId || null,
+        p_remarks: remarks,
+      })
+
+      if (rpcError) {
+        // Fallback to direct table updates
+        await supabase
+          .from('rider_profile_change_requests')
+          .update({
+            status: 'rejected',
+            admin_remarks: remarks,
+            reviewed_by: adminId || null,
+            reviewed_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', requestId)
+
+        await supabase
+          .from('riders')
+          .update({
+            profile_update_status: 'rejected',
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', riderId)
+      }
+    } catch (err) {
+      console.error('Error rejecting change request:', err)
+      throw err
+    }
+  },
+
+  /// Real-time subscription to rider profile updates & change requests
+  subscribeToRiders(onChange: () => void): () => void {
+    const channel = supabase
+      .channel('admin-rider-sync-channel')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'riders' }, () => {
+        onChange()
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, () => {
+        onChange()
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'rider_profile_change_requests' }, () => {
+        onChange()
+      })
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
     }
   },
 }

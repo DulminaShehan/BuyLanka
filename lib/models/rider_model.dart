@@ -14,6 +14,12 @@ class RiderModel {
   final double? currentLatitude;
   final double? currentLongitude;
   final DateTime? lastLocationUpdatedAt;
+  final String? residentialAddress;
+  final String? vehicleModel;
+  final String? vehicleColor;
+  final String? nicNumber;
+  final String profileUpdateStatus; // 'approved', 'pending_review', 'rejected'
+  final String? adminRemarks;
   final ProfileModel? profile;
   final DateTime? createdAt;
   final DateTime? updatedAt;
@@ -32,6 +38,12 @@ class RiderModel {
     this.currentLatitude,
     this.currentLongitude,
     this.lastLocationUpdatedAt,
+    this.residentialAddress,
+    this.vehicleModel,
+    this.vehicleColor,
+    this.nicNumber,
+    this.profileUpdateStatus = 'approved',
+    this.adminRemarks,
     this.profile,
     this.createdAt,
     this.updatedAt,
@@ -39,6 +51,7 @@ class RiderModel {
 
   bool get isApproved => verificationStatus == 'approved';
   bool get isAvailableForOrders => isOnline && availabilityStatus == 'available';
+  bool get hasPendingProfileReview => profileUpdateStatus == 'pending_review';
 
   String get vehicleTypeDisplay {
     switch (vehicleType.toLowerCase()) {
@@ -74,6 +87,12 @@ class RiderModel {
       lastLocationUpdatedAt: json['last_location_updated_at'] != null
           ? DateTime.tryParse(json['last_location_updated_at'].toString())
           : null,
+      residentialAddress: json['residential_address'] as String?,
+      vehicleModel: json['vehicle_model'] as String?,
+      vehicleColor: json['vehicle_color'] as String?,
+      nicNumber: json['nic_number'] as String?,
+      profileUpdateStatus: json['profile_update_status'] as String? ?? 'approved',
+      adminRemarks: json['admin_remarks'] as String?,
       profile: json['profile'] != null ? ProfileModel.fromJson(json['profile'] as Map<String, dynamic>) : null,
       createdAt: json['created_at'] != null ? DateTime.tryParse(json['created_at'].toString()) : null,
       updatedAt: json['updated_at'] != null ? DateTime.tryParse(json['updated_at'].toString()) : null,
@@ -93,6 +112,12 @@ class RiderModel {
     double? currentLatitude,
     double? currentLongitude,
     DateTime? lastLocationUpdatedAt,
+    String? residentialAddress,
+    String? vehicleModel,
+    String? vehicleColor,
+    String? nicNumber,
+    String? profileUpdateStatus,
+    String? adminRemarks,
     ProfileModel? profile,
   }) {
     return RiderModel(
@@ -109,6 +134,12 @@ class RiderModel {
       currentLatitude: currentLatitude ?? this.currentLatitude,
       currentLongitude: currentLongitude ?? this.currentLongitude,
       lastLocationUpdatedAt: lastLocationUpdatedAt ?? this.lastLocationUpdatedAt,
+      residentialAddress: residentialAddress ?? this.residentialAddress,
+      vehicleModel: vehicleModel ?? this.vehicleModel,
+      vehicleColor: vehicleColor ?? this.vehicleColor,
+      nicNumber: nicNumber ?? this.nicNumber,
+      profileUpdateStatus: profileUpdateStatus ?? this.profileUpdateStatus,
+      adminRemarks: adminRemarks ?? this.adminRemarks,
       profile: profile ?? this.profile,
       createdAt: createdAt,
       updatedAt: DateTime.now(),
@@ -130,6 +161,12 @@ class RiderModel {
       'current_latitude': currentLatitude,
       'current_longitude': currentLongitude,
       'last_location_updated_at': lastLocationUpdatedAt?.toIso8601String(),
+      'residential_address': residentialAddress,
+      'vehicle_model': vehicleModel,
+      'vehicle_color': vehicleColor,
+      'nic_number': nicNumber,
+      'profile_update_status': profileUpdateStatus,
+      'admin_remarks': adminRemarks,
     };
   }
 }

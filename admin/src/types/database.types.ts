@@ -15,6 +15,8 @@ export type ShopStatus = 'pending' | 'approved' | 'suspended' | 'rejected'
 export type RiderVehicleType = 'motorcycle' | 'three_wheeler' | 'car' | 'van' | 'bicycle'
 export type RiderAvailability = 'available' | 'busy' | 'offline'
 export type RiderVerificationStatus = 'pending' | 'approved' | 'rejected' | 'suspended'
+export type RiderProfileUpdateStatus = 'approved' | 'pending_review' | 'rejected'
+export type RiderChangeRequestStatus = 'pending' | 'approved' | 'rejected'
 export type ProductStatus = 'pending_approval' | 'published' | 'draft' | 'rejected' | 'archived'
 export type PaymentMethod = 'cod' | 'card' | 'bank_transfer' | 'koko' | 'mintpay'
 export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'refunded'
@@ -167,6 +169,11 @@ export interface Database {
           verification_status: RiderVerificationStatus
           rating: number
           total_deliveries: number
+          residential_address: string | null
+          vehicle_model: string | null
+          vehicle_color: string | null
+          nic_number: string | null
+          profile_update_status: RiderProfileUpdateStatus
           created_at: string
           updated_at: string
         }
@@ -180,6 +187,11 @@ export interface Database {
           verification_status?: RiderVerificationStatus
           rating?: number
           total_deliveries?: number
+          residential_address?: string | null
+          vehicle_model?: string | null
+          vehicle_color?: string | null
+          nic_number?: string | null
+          profile_update_status?: RiderProfileUpdateStatus
           created_at?: string
           updated_at?: string
         }
@@ -193,6 +205,52 @@ export interface Database {
           verification_status?: RiderVerificationStatus
           rating?: number
           total_deliveries?: number
+          residential_address?: string | null
+          vehicle_model?: string | null
+          vehicle_color?: string | null
+          nic_number?: string | null
+          profile_update_status?: RiderProfileUpdateStatus
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      rider_profile_change_requests: {
+        Row: {
+          id: string
+          rider_id: string
+          change_type: string
+          requested_changes: Record<string, any>
+          previous_values: Record<string, any>
+          status: RiderChangeRequestStatus
+          admin_remarks: string | null
+          reviewed_by: string | null
+          reviewed_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          rider_id: string
+          change_type?: string
+          requested_changes: Record<string, any>
+          previous_values: Record<string, any>
+          status?: RiderChangeRequestStatus
+          admin_remarks?: string | null
+          reviewed_by?: string | null
+          reviewed_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          rider_id?: string
+          change_type?: string
+          requested_changes?: Record<string, any>
+          previous_values?: Record<string, any>
+          status?: RiderChangeRequestStatus
+          admin_remarks?: string | null
+          reviewed_by?: string | null
+          reviewed_at?: string | null
           created_at?: string
           updated_at?: string
         }

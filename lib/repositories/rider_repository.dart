@@ -247,4 +247,82 @@ class RiderRepository {
       return const RiderEarningsModel();
     }
   }
+
+  /// Update ordinary rider profile fields (Immediate application)
+  Future<void> updateRiderProfile({
+    required String riderId,
+    required String fullName,
+    required String phoneNumber,
+    String? residentialAddress,
+    String? vehicleModel,
+    String? vehicleColor,
+    String? avatarUrl,
+  }) async {
+    final nowIso = DateTime.now().toIso8601String();
+
+    // 1. Update profiles table
+    final profilePayload = <String, dynamic>{
+      'full_name': fullName.trim(),
+      'phone_number': phoneNumber.trim(),
+      'updated_at': nowIso,
+    };
+    if (avatarUrl != null) {
+      profilePayload['avatar_url'] = avatarUrl;
+    }
+
+    await _client.from(SupabaseConstants.profilesTable).update(profilePayload).eq('id', riderId);
+
+    // 2. Update riders table ordinary fields
+    final riderPayload = <String, dynamic>{
+      'residential_address': residentialAddress?.trim(),
+      'vehicle_model': vehicleModel?.trim(),
+      'vehicle_color': vehicleColor?.trim(),
+      'updated_at': nowIso,
+    };
+
+    await _client.from(SupabaseConstants.ridersTable).update(riderPayload).eq('id', riderId);
+  }
+
+  /// Submit sensitive changes for Admin Review (e.g. vehicle number, driving license, vehicle type)
+  Future<void> submitSensitiveChangeRequest({
+    required String riderId,
+    required Map<String, dynamic> requestedChanges,
+    required Map<String, dynamic> previousValues,
+  }) async {
+    final nowIso = DateTime.now().toIso8601String();
+
+    // 1. Insert change request into rider_profile_change_requests
+    await _client.from('rider_profile_change_requests').insert({
+      'rider_id': riderId,
+      'change_type': 'sensitive_details',
+      'requested_changes': requestedChanges,
+      'previous_values': previousValues,
+      'status': 'pending',
+      'created_at': nowIso,
+      'updated_at': nowIso,
+    });
+
+    // 2. Mark rider status as pending_review
+    await _client.from(SupabaseConstants.ridersTable).update({
+      'profile_update_status': 'pending_review',
+      'updated_at': nowIso,
+    }).eq('id', riderId);
+  }
+
+  /// Fetch latest sensitive change request for rider
+  Future<Map<String, dynamic>?> getLatestChangeRequest(String riderId) async {
+    try {
+      final data = await _client
+          .from('rider_profile_change_requests')
+          .select()
+          .eq('rider_id', riderId)
+          .order('created_at', ascending: false)
+          .limit(1)
+          .maybeSingle();
+
+      return data;
+    } catch (_) {
+      return null;
+    }
+  }
 }

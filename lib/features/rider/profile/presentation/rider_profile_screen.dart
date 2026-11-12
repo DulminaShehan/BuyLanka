@@ -7,6 +7,7 @@ import 'package:buylanka/core/constants/app_colors.dart';
 import 'package:buylanka/core/location/map_utils.dart';
 import 'package:buylanka/features/auth/controllers/auth_controller.dart';
 import 'package:buylanka/features/auth/presentation/seller_login_screen.dart';
+import 'package:buylanka/features/rider/profile/presentation/rider_edit_profile_screen.dart';
 import 'package:buylanka/repositories/storage_repository.dart';
 
 class RiderProfileScreen extends ConsumerStatefulWidget {
@@ -301,11 +302,48 @@ class _RiderProfileScreenState extends ConsumerState<RiderProfileScreen> {
       backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text('Rider Profile', style: TextStyle(fontWeight: FontWeight.bold)),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.edit_note_rounded, color: AppColors.primary),
+            tooltip: 'Edit Profile',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const RiderEditProfileScreen()),
+              );
+            },
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
+            // Status banner for pending review
+            if (rider?.hasPendingProfileReview == true) ...[
+              Container(
+                margin: const EdgeInsets.only(bottom: 16),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFEF3C7),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFFDE68A)),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(Icons.schedule_rounded, color: Color(0xFFB45309), size: 20),
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        'Your vehicle or license details update is pending review by Admin.',
+                        style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: Color(0xFF92400E)),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+
             // 1. Profile Avatar & Name Card
             Container(
               width: double.infinity,
@@ -360,6 +398,25 @@ class _RiderProfileScreenState extends ConsumerState<RiderProfileScreen> {
                       ],
                     ),
                   ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const RiderEditProfileScreen()),
+                        );
+                      },
+                      icon: const Icon(Icons.edit_rounded, size: 16),
+                      label: const Text('Edit Profile & Vehicle Details'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.primary,
+                        side: const BorderSide(color: AppColors.primary),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -407,7 +464,13 @@ class _RiderProfileScreenState extends ConsumerState<RiderProfileScreen> {
                   const Divider(height: 20),
                   _buildDetailRow('Vehicle Type', vehicleType, icon: Icons.motorcycle_rounded),
                   _buildDetailRow('Vehicle Plate', vehicleNumber, icon: Icons.confirmation_number_outlined),
+                  if (rider?.vehicleModel != null && rider!.vehicleModel!.isNotEmpty)
+                    _buildDetailRow('Vehicle Model', rider.vehicleModel!, icon: Icons.electric_moped_outlined),
+                  if (rider?.vehicleColor != null && rider!.vehicleColor!.isNotEmpty)
+                    _buildDetailRow('Vehicle Color', rider.vehicleColor!, icon: Icons.palette_outlined),
                   _buildDetailRow('Driving License', licenseNumber, icon: Icons.badge_outlined),
+                  if (rider?.residentialAddress != null && rider!.residentialAddress!.isNotEmpty)
+                    _buildDetailRow('Residential Address', rider.residentialAddress!, icon: Icons.home_outlined),
                   _buildDetailRow('Operational Zone', zone, icon: Icons.map_outlined),
                   _buildDetailRow('Contact Phone', phone, icon: Icons.phone_outlined),
                 ],
@@ -417,29 +480,33 @@ class _RiderProfileScreenState extends ConsumerState<RiderProfileScreen> {
             const SizedBox(height: 16),
 
             // 4. Support & Legal
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppColors.border),
-              ),
-              child: Column(
-                children: [
-                  ListTile(
-                    leading: const Icon(Icons.support_agent_rounded, color: AppColors.primary),
-                    title: const Text('Rider Operations Hotline', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-                    subtitle: const Text('+94 11 234 5678 • 24/7 Delivery dispatch support', style: TextStyle(fontSize: 12)),
-                    trailing: const Icon(Icons.call_rounded, color: AppColors.success, size: 20),
-                    onTap: () => MapUtils.makePhoneCall('+94112345678'),
-                  ),
-                  const Divider(height: 1),
-                  ListTile(
-                    leading: const Icon(Icons.security_rounded, color: AppColors.textLight),
-                    title: const Text('Rider Safety & Guidelines', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-                    trailing: const Icon(Icons.chevron_right_rounded),
-                    onTap: () {},
-                  ),
-                ],
+            Material(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              clipBehavior: Clip.antiAlias,
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: Column(
+                  children: [
+                    ListTile(
+                      leading: const Icon(Icons.support_agent_rounded, color: AppColors.primary),
+                      title: const Text('Rider Operations Hotline', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                      subtitle: const Text('+94 11 234 5678 • 24/7 Delivery dispatch support', style: TextStyle(fontSize: 12)),
+                      trailing: const Icon(Icons.call_rounded, color: AppColors.success, size: 20),
+                      onTap: () => MapUtils.makePhoneCall('+94112345678'),
+                    ),
+                    const Divider(height: 1),
+                    ListTile(
+                      leading: const Icon(Icons.security_rounded, color: AppColors.textLight),
+                      title: const Text('Rider Safety & Guidelines', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                      trailing: const Icon(Icons.chevron_right_rounded),
+                      onTap: () {},
+                    ),
+                  ],
+                ),
               ),
             ),
 

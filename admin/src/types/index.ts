@@ -12,6 +12,7 @@ export type Order = Database['public']['Tables']['orders']['Row']
 export type OrderItem = Database['public']['Tables']['order_items']['Row']
 export type Delivery = Database['public']['Tables']['deliveries']['Row']
 export type PlatformSetting = Database['public']['Tables']['platform_settings']['Row']
+export type RiderProfileChangeRequest = Database['public']['Tables']['rider_profile_change_requests']['Row']
 
 // Extended / Join Types for UI
 export interface ShopWithSeller extends Shop {
@@ -38,6 +39,7 @@ export interface SellerWithProfile extends Seller {
 export interface RiderWithProfile extends Rider {
   profile: Profile
   deliveries_count?: number
+  pending_change_requests?: RiderProfileChangeRequest[]
 }
 
 export interface DashboardMetrics {

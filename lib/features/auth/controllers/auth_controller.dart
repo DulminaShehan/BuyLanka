@@ -369,6 +369,48 @@ class AuthController extends StateNotifier<AuthStateData> {
     await refreshProfile();
   }
 
+  /// Update ordinary rider profile fields
+  Future<void> updateRiderProfileDetails({
+    required String fullName,
+    required String phoneNumber,
+    String? residentialAddress,
+    String? vehicleModel,
+    String? vehicleColor,
+    String? avatarUrl,
+  }) async {
+    final user = _authRepository.currentUser;
+    if (user == null) return;
+
+    await _riderRepository.updateRiderProfile(
+      riderId: user.id,
+      fullName: fullName,
+      phoneNumber: phoneNumber,
+      residentialAddress: residentialAddress,
+      vehicleModel: vehicleModel,
+      vehicleColor: vehicleColor,
+      avatarUrl: avatarUrl,
+    );
+
+    await refreshProfile();
+  }
+
+  /// Submit sensitive changes for admin approval
+  Future<void> submitRiderSensitiveChangeRequest({
+    required Map<String, dynamic> requestedChanges,
+    required Map<String, dynamic> previousValues,
+  }) async {
+    final user = _authRepository.currentUser;
+    if (user == null) return;
+
+    await _riderRepository.submitSensitiveChangeRequest(
+      riderId: user.id,
+      requestedChanges: requestedChanges,
+      previousValues: previousValues,
+    );
+
+    await refreshProfile();
+  }
+
   Future<void> refreshProfile() async {
     final user = _authRepository.currentUser;
     if (user == null) return;
